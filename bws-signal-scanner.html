@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BWS Signal Scanner</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0a1628;--navy2:#0f1d35;--card:#13233f;--line:#24365a;--gold:#d4a537;--gold2:#f0c75e;--txt:#e8edf5;--mut:#8fa0bf;--bull:#34d399;--bear:#f87171;--blue:#7dd3fc}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy);color:var(--txt);font-family:'Barlow',sans-serif;font-size:15px;line-height:1.45;min-height:100vh}
+a{color:var(--gold2);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:1280px;margin:0 auto;padding:20px 16px 60px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:16px}
+h1{font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:2px;color:var(--gold);line-height:1}
+h1 span{color:var(--txt)}
+.sub{color:var(--mut);font-size:13px;margin-top:4px}
+.mono{font-family:'DM Mono',monospace}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+button,select,input{font-family:inherit;font-size:14px}
+.btn{background:var(--gold);color:#1a1200;border:0;border-radius:6px;padding:9px 16px;font-weight:600;cursor:pointer}
+.btn:hover{background:var(--gold2)}
+.btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--gold);color:var(--gold2)}
+.btn:disabled{opacity:.5;cursor:default}
+.chip{background:var(--navy2);border:1px solid var(--line);color:var(--mut);border-radius:20px;padding:5px 13px;cursor:pointer;font-size:13px}
+.chip.on{border-color:var(--gold);color:var(--gold2);background:#1a2a48}
+input,select{background:var(--navy2);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:8px 10px}
+input:focus,select:focus{outline:1px solid var(--gold)}
+.status{font-size:13px;color:var(--mut);min-height:20px}
+.prog{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin:6px 0 14px}
+.prog i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+.tabs{display:flex;gap:4px;margin-bottom:12px}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);padding:8px 14px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px}
+.tab.on{color:var(--gold);border-color:var(--gold)}
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+table{width:100%;border-collapse:collapse;min-width:960px}
+th{font-family:'DM Mono',monospace;font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut);text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid #1b2d4d;white-space:nowrap;font-size:14px}
+tr.row{cursor:pointer}tr.row:hover td{background:#182a4a}
+tr.row.sel td{background:#1d3159}
+td.sym{font-weight:600}
+td.sym small{display:block;color:var(--mut);font-weight:400;font-size:11px}
+.up{color:var(--bull)}.dn{color:var(--bear)}.mu{color:var(--mut)}
+.sig{display:inline-block;border-radius:5px;padding:3px 9px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.5px}
+.sig.sb{background:#064e3b;color:#6ee7b7;border:1px solid #10b981}
+.sig.b{background:#0b3b30;color:var(--bull);border:1px solid #1f7a5f}
+.sig.n{background:#1a2a48;color:var(--mut);border:1px solid var(--line)}
+.sig.r{background:#4a1d1d;color:var(--bear);border:1px solid #a24040}
+.sig.sr{background:#5b1616;color:#fca5a5;border:1px solid #ef4444}
+.score{font-family:'DM Mono',monospace;font-weight:500}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin-top:16px}
+.panel h2{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;color:var(--gold)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+canvas{width:100%;height:420px;display:block;background:var(--navy2);border:1px solid var(--line);border-radius:8px}
+.factor{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #1b2d4d;font-size:14px}
+.factor:last-child{border:0}
+.fv{flex:0 0 38px;text-align:center;font-family:'DM Mono',monospace;font-weight:500;border-radius:5px;padding:2px 0;height:24px}
+.fv.p{background:#0b3b30;color:var(--bull)}.fv.m{background:#4a1d1d;color:var(--bear)}.fv.z{background:#1a2a48;color:var(--mut)}
+.fn{font-family:'DM Mono',monospace;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.6px}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.links a{border:1px solid var(--line);border-radius:6px;padding:6px 12px;font-size:13px}
+.links a:hover{border-color:var(--gold);text-decoration:none}
+details{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px}
+summary{cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--gold)}
+details ul{margin:10px 0 0 18px;color:#c9d3e6}details li{margin:5px 0}
+.disc{margin-top:22px;font-size:12px;color:var(--mut);border-top:1px solid var(--line);padding-top:12px}
+dialog{background:var(--card);color:var(--txt);border:1px solid var(--gold);border-radius:12px;padding:22px;max-width:440px;width:92%}
+dialog::backdrop{background:rgba(0,0,0,.65)}
+dialog h3{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold);letter-spacing:1px;margin-bottom:10px}
+dialog label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.6px}
+dialog input,dialog select{width:100%}
+.hide{display:none}
+.x{color:var(--mut);cursor:pointer;margin-left:6px}.x:hover{color:var(--bear)}
+.err{color:var(--bear);font-size:12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:14px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h4{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--gold);margin-bottom:2px}
+.card .desc{font-size:12px;color:var(--mut);margin-bottom:8px;min-height:32px}
+.card .big{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;line-height:1.1}
+.card .row2{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);padding:3px 0;border-top:1px solid #1b2d4d}
+.card .row2 b{color:var(--txt);font-family:'DM Mono',monospace;font-weight:500}
+.warn{border:1px solid #7a5a12;background:#2a2008;border-radius:10px;padding:12px 16px;font-size:13px;color:#e9d9a8;margin:12px 0}
+.warn ul{margin:6px 0 0 18px}
+.scroll{max-height:560px;overflow:auto}
+#cv{height:clamp(400px,64vh,620px);cursor:crosshair;touch-action:pan-y}
+.ctb{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:12px 0 8px}
+.zb{background:var(--navy2);border:1px solid var(--line);color:var(--mut);border-radius:6px;padding:5px 11px;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer}
+.zb:hover{border-color:var(--gold);color:var(--gold2)}
+.zb.on{border-color:var(--gold);color:var(--gold2);background:#1a2a48}
+.zb.exp{margin-left:auto;border-color:#c2692a;color:#fdba74}
+.zb:disabled{opacity:.35;cursor:default}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:0 28px}
+dialog#chartDlg{max-width:none;width:98vw;height:96vh;max-height:96vh;padding:14px 16px;margin:auto}
+dialog#chartDlg[open]{display:flex;flex-direction:column;gap:6px}
+.dhead{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.dtabs{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.dsym{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1.5px;color:var(--gold)}
+.e20line{font-family:'DM Mono',monospace;font-size:13px;color:#fdba74;background:#2a1a0c;border:1px solid #c2692a;border-radius:8px;padding:6px 12px}
+.cwrap{position:relative;flex:1;min-height:0}
+.cwrap canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none}
+.e20box{border:1px solid #c2692a;background:#2a1a0c;border-radius:10px;padding:12px 14px;margin:12px 0}
+.e20box .t{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#fb923c}
+.e20box .v{font-family:'DM Mono',monospace;font-size:24px;font-weight:500;color:#fdba74;line-height:1.2}
+.e20box p{font-size:14px;color:#f1dcc7;margin-top:4px}
+.e20c{color:#fdba74}
+.mtf{display:inline-block;width:22px;text-align:center;font-family:'DM Mono',monospace;font-size:11px;border-radius:4px;margin-right:3px;padding:2px 0;border:1px solid var(--line);color:var(--mut);background:#1a2a48}
+.mtf.sb{background:#064e3b;color:#6ee7b7;border-color:#10b981}.mtf.b{background:#0b3b30;color:var(--bull);border-color:#1f7a5f}
+.mtf.r{background:#4a1d1d;color:var(--bear);border-color:#a24040}.mtf.sr{background:#5b1616;color:#fca5a5;border-color:#ef4444}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>BWS <span>SIGNAL SCANNER</span></h1>
+    <div class="sub">Moving averages · Fibonacci retracements · RSI divergences — the Boot Camp TA toolkit, automated</div>
+  </div>
+  <div class="mono mu" id="lastScan" style="font-size:12px">No scan yet</div>
+</header>
+
+<div class="tabs">
+  <button class="tab on" data-tab="scan">Scanner</button>
+  <button class="tab" data-tab="log">Paper Log</button>
+  <button class="tab" data-tab="bt">Backtest</button>
+</div>
+
+<section id="tab-scan">
+  <div class="bar">
+    <button class="btn" id="scanBtn">Run scan</button>
+    <button class="btn ghost" id="addBtn">+ Add token</button>
+    <input id="cgKey" placeholder="CoinGecko demo API key (optional)" style="width:250px">
+    <button class="btn ghost" id="clearBtn">Clear cache</button>
+    <label class="mu" style="font-size:13px;margin-left:8px">Timeframe&nbsp;<select id="tfSel"><option value="D">Daily</option><option value="W">Weekly</option><option value="M">Monthly</option></select></label>
+    <label class="mu" style="font-size:13px" title="Off = signals use the last CLOSED candle (standard; never changes after the fact). On = also counts today's / this week's / this month's unfinished candle (live, but can flip before the candle closes)."><input type="checkbox" id="incOpen" style="width:auto">&nbsp;include unfinished candle</label>
+  </div>
+  <div class="bar" id="filters">
+    <span class="chip on" data-f="all">All</span>
+    <span class="chip" data-f="bull">Bullish</span>
+    <span class="chip" data-f="bear">Bearish</span>
+    <span class="chip" data-f="div">Has divergence</span>
+    <span class="chip" data-f="fib">In Fib zone</span>
+    <span class="chip" data-f="near" title="Price within 2% of the fast (20-day) EMA — testing it as support or resistance">Near 20 EMA</span>
+    <span class="chip" data-f="align" title="Daily, weekly and monthly all Bullish or better">D·W·M all bullish</span>
+    <span style="flex:1"></span>
+    <label class="mu" style="font-size:13px">Sort&nbsp;
+      <select id="sortSel"><option value="score">Score (high → low)</option><option value="scoreAsc">Score (low → high)</option><option value="ch7">7-day change</option><option value="sym">A → Z</option></select>
+    </label>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="prog"><i id="prog"></i></div>
+
+  <div class="tblwrap">
+    <table style="min-width:1080px">
+      <thead><tr><th>Token</th><th>Price</th><th id="thChg">7d</th><th id="thE20" style="color:#fb923c">20-day EMA</th><th id="thTrend">200-day EMA</th><th id="thCross">50/200 EMA</th><th>RSI</th><th>Fibonacci</th><th>Divergence</th><th>Score</th><th>Signal</th><th title="Signal on Daily, Weekly and Monthly">D · W · M</th><th>Chart</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="panel hide" id="detail"></div>
+
+  <details>
+    <summary>How the score works</summary>
+    <ul>
+      <li><b>Timeframes:</b> pick Daily, Weekly or Monthly. All averages are <b>EMAs</b> (exponential moving averages, seeded with a simple average the way TradingView does). <b>Daily</b> 20/50/100/200-day EMAs, 120-day Fibonacci swing, 30-day divergence window. <b>Weekly</b> 20/50/100/200-week EMAs, 52-week swing, 12-week divergence window. <b>Monthly</b> 6/12/18/24-month EMAs (200 months is more history than exists), 24-month swing, 6-month divergence window. The "D · W · M" column always shows all three at once. Weekly and monthly need years of history, so they use the free Binance data and only work for Binance-listed tokens.</li>
+      <li><b>Slow EMA (±1):</b> price above the slowest EMA (200-day, 200-week or 24-month) is an uptrend on that timeframe, below is a downtrend.</li>
+      <li><b>50/200 EMA cross (±1):</b> 50 above 200 = golden-cross state, below = death-cross state. Recent crosses are flagged.</li>
+      <li><b>Chart controls:</b> click a token to open its chart. <b>Zoom</b> picks how many bars to show (the price scale fits only the bars on screen, so an old peak no longer squashes today). <b>Log</b> switches to a log price scale (Auto turns it on when the range is very wide). <b>⤢ Expand</b> (or double-click the chart) opens it full screen with Daily / Weekly / Monthly tabs. Move the mouse over the chart for exact prices, EMAs and RSI on any bar.</li>
+      <li><b>EMA stack (±1):</b> bullish when price &gt; 20 &gt; 50 &gt; 100 &gt; 200 (every average in order), bearish when it is fully reversed, otherwise 0. This replaces the old 20/50-only check, so it is stricter and fires less often.</li>
+      <li><b>20 EMA readout (not scored on its own):</b> the orange 20 EMA column and chart line show exactly where the fast EMA is, how far price is from it, whether it is rising or falling, and how many closes in a row price has held above or below it. Use the "Near 20 EMA" filter to find tokens testing it right now.</li>
+      <li><b>RSI (±1):</b> under 30 oversold (+1), over 70 overbought (−1). Neutral in between.</li>
+      <li><b>Fibonacci (±1):</b> the scanner finds the biggest swing in the lookback window (120 days, 52 weeks or 24 months). Price pulling back into the 0.382–0.786 zone of an up-swing = dip-buy zone (+1). Price bouncing into the same zone of a down-swing = resistance (−1). 0.618 is the "golden pocket".</li>
+      <li><b>Divergence (±2 regular, ±1 hidden):</b> compares the last two price swing lows/highs to RSI at those points. Regular bullish = price lower low, RSI higher low. Regular bearish = price higher high, RSI lower high. Hidden divergences signal trend continuation. Only counted if the second pivot is recent (30 days, 12 weeks or 6 months).</li>
+      <li><b>Total:</b> +4 or more Strong Bullish · +2/+3 Bullish · −1 to +1 Neutral · −2/−3 Bearish · −4 or less Strong Bearish.</li>
+      <li><b>Data:</b> when Binance is reachable, all three timeframes use Binance candles (real highs and lows, free, no key). Signals use the last <i>closed</i> candle unless you tick "include unfinished candle". If Binance is blocked in your browser, or a token is not listed there, the scanner falls back to CoinGecko daily closes (daily timeframe only) or GeckoTerminal (DEX tokens, daily only). Always confirm on a TradingView chart before acting.</li>
+    </ul>
+  </details>
+</section>
+
+<section id="tab-log" class="hide">
+  <div class="bar">
+    <button class="btn ghost" id="csvBtn">Export CSV</button>
+    <button class="btn ghost" id="clearLogBtn">Clear log</button>
+    <span class="mu" style="font-size:13px">Every time a token's signal changes between scans, it's logged here with the price. Paper-trade for 4–8 weeks before risking real money.</span>
+  </div>
+  <div class="tblwrap">
+    <table style="min-width:700px">
+      <thead><tr><th>Date</th><th>Token</th><th>Timeframe</th><th>Signal</th><th>Score</th><th>Price then</th><th>Price now</th><th>Move</th><th>Right so far?</th></tr></thead>
+      <tbody id="logBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="tab-bt" class="hide">
+  <div class="bar">
+    <label class="mu" style="font-size:13px">Data&nbsp;<select id="btSrc"><option value="bn">Binance (free, multi-year)</option><option value="cg">CoinGecko (365 days)</option></select></label>
+    <label class="mu" style="font-size:13px">Timeframe&nbsp;<select id="btTf"><option value="D">Daily</option><option value="W">Weekly</option><option value="M">Monthly</option></select></label>
+    <label class="mu" style="font-size:13px">History&nbsp;<select id="btYears"><option value="5" selected>5 years</option><option value="4">4 years</option><option value="3">3 years</option><option value="2">2 years</option></select></label>
+    <label class="mu" style="font-size:13px">Tokens&nbsp;<input id="btN" type="number" value="100" min="5" max="150" style="width:70px"></label>
+    <label class="mu" style="font-size:13px">Cost per side %&nbsp;<input id="btCost" type="number" step="0.05" value="0.3" style="width:70px"></label>
+    <label class="mu" style="font-size:13px">$ per token&nbsp;<input id="btAlloc" type="number" value="1000" style="width:90px"></label>
+    <button class="btn" id="btRun">Run backtest</button>
+    <button class="btn ghost" id="btCsv">Export CSV</button>
+  </div>
+  <div class="status" id="btStatus">Runs the exact scanner scoring (MAs + Fibonacci + RSI divergences) day by day on each coin, and compares it with a simple trend baseline and buy &amp; hold. Binance daily candles are free and need no key; a 5-year run takes about 1–3 minutes. Coins are ranked by market cap using one CoinGecko call.</div>
+  <div class="prog"><i id="btProg"></i></div>
+  <div class="warn"><b>Read before trusting any number here:</b>
+    <ul>
+      <li><b>The first 200 days of each coin's history are used to warm up the 200-day EMA</b>, so the tested period starts about 200 days after the history begins. With 5 years of Binance data, testing begins around spring 2022 and includes the 2022 bear market. The CoinGecko option only tests about 165 days, which is a single market regime.</li>
+      <li><b>Survivorship bias.</b> It uses today's top coins by market cap (only those listed on Binance, minus stablecoins and wrapped/staked copies). Coins that collapsed or were delisted aren't in the list, which flatters every column, buy &amp; hold most of all.</li>
+      <li><b>Trades execute at the next daily close</b> after a signal, with the cost per side applied on every buy and sell. Real small-cap slippage can be much worse than 0.3%.</li>
+      <li><b>Weekly and monthly runs use all available Binance history</b> (the History box applies to daily only). The slow average needs 200 weeks or 24 months before testing can start, so far fewer coins qualify and monthly has very few trades. Treat those results as rough, not proof.</li>
+      <li><b>Long-only, equal money per token, idle cash earns nothing.</b> Coins that listed later sit in cash until their data starts. Past results do not predict future results.</li>
+    </ul>
+  </div>
+  <div id="btOut"></div>
+</section>
+
+<div class="disc">Educational tool from Block Wall Street. Signals are rule-based readings of past price data, not predictions and not financial advice. Crypto is volatile and you can lose everything you put in. Do your own research and never trade money you can't afford to lose.</div>
+</div>
+
+<dialog id="chartDlg"></dialog>
+
+<dialog id="addDlg">
+  <h3>Add a token</h3>
+  <label>Data source</label>
+  <select id="aSrc"><option value="cg">CoinGecko listed coin</option><option value="gt">GeckoTerminal DEX token (contract address)</option></select>
+  <div id="aCg">
+    <label>CoinGecko API id (from the coin's CoinGecko page)</label>
+    <input id="aId" placeholder="e.g. hyperliquid">
+  </div>
+  <div id="aGt" class="hide">
+    <label>Network</label>
+    <select id="aNet"><option value="eth">Ethereum</option><option value="solana">Solana</option><option value="base">Base</option><option value="arbitrum">Arbitrum</option><option value="avax">Avalanche</option><option value="bsc">BNB Chain</option><option value="optimism">Optimism</option><option value="polygon_pos">Polygon</option></select>
+    <label>Token contract address</label>
+    <input id="aAddr" placeholder="0x… or Solana mint">
+  </div>
+  <label>Ticker label (match the Binance ticker if you want weekly/monthly)</label>
+  <input id="aSym" placeholder="e.g. HYPE">
+  <label>TradingView symbol (optional)</label>
+  <input id="aTv" placeholder="e.g. BYBIT:HYPEUSDT">
+  <div class="err" id="aErr"></div>
+  <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+    <button class="btn ghost" id="aCancel">Cancel</button>
+    <button class="btn" id="aSave">Add</button>
+  </div>
+</dialog>
+
+<script>
+/* ---------- Setup ---------- */
+const $=s=>document.querySelector(s);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const CACHE_MS=30*60*1000;
+
+const DEFAULTS=[
+ {id:'bitcoin',sym:'BTC',tv:'COINBASE:BTCUSD'},
+ {id:'ethereum',sym:'ETH',tv:'COINBASE:ETHUSD'},
+ {id:'solana',sym:'SOL',tv:'COINBASE:SOLUSD'},
+ {id:'ripple',sym:'XRP',tv:'COINBASE:XRPUSD'},
+ {id:'binancecoin',sym:'BNB',tv:'BINANCE:BNBUSDT'},
+ {id:'avalanche-2',sym:'AVAX',tv:'COINBASE:AVAXUSD'},
+ {id:'chainlink',sym:'LINK',tv:'COINBASE:LINKUSD'},
+ {id:'cardano',sym:'ADA',tv:'COINBASE:ADAUSD'},
+ {id:'dogecoin',sym:'DOGE',tv:'COINBASE:DOGEUSD'},
+ {id:'sui',sym:'SUI',tv:'COINBASE:SUIUSD'},
+ {id:'near',sym:'NEAR',tv:'COINBASE:NEARUSD'},
+ {id:'aave',sym:'AAVE',tv:'COINBASE:AAVEUSD'},
+ {id:'uniswap',sym:'UNI',tv:'COINBASE:UNIUSD'},
+ {id:'injective-protocol',sym:'INJ',tv:'COINBASE:INJUSD'},
+ {id:'render-token',sym:'RENDER',tv:'COINBASE:RENDERUSD'},
+ {id:'arbitrum',sym:'ARB',tv:'COINBASE:ARBUSD'},
+ {id:'ondo-finance',sym:'ONDO',tv:'COINBASE:ONDOUSD'},
+ {id:'pendle',sym:'PENDLE',tv:'BINANCE:PENDLEUSDT'},
+ {id:'jupiter-exchange-solana',sym:'JUP',tv:'COINBASE:JUPUSD'},
+ {id:'aerodrome-finance',sym:'AERO',tv:'COINBASE:AEROUSD'}
+];
+let custom=LS.get('bws_custom',[]);
+let cache=LS.get('bws_cache_v2',{});
+let results={};
+let filter='all',sortBy='score',selected=null,scanning=false,curTf=LS.get('bws_tf','D');
+const tokens=()=>DEFAULTS.map(x=>({...x,key:'cg:'+x.id,src:'cg'})).concat(custom);
+
+/* ---------- Indicators ---------- */
+function ema(a,n){
+  const o=new Array(a.length).fill(null);if(a.length<n)return o;
+  let sm=0;for(let i=0;i<n;i++)sm+=a[i];
+  let e=sm/n;o[n-1]=e;const k=2/(n+1);
+  for(let i=n;i<a.length;i++){e=a[i]*k+e*(1-k);o[i]=e}
+  return o;
+}
+function sma(a,n){const o=new Array(a.length).fill(null);let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=n)s-=a[i-n];if(i>=n-1)o[i]=s/n}return o}
+function rsi(a,n=14){
+  const o=new Array(a.length).fill(null);if(a.length<=n)return o;
+  let g=0,l=0;for(let i=1;i<=n;i++){const d=a[i]-a[i-1];if(d>=0)g+=d;else l-=d}
+  g/=n;l/=n;o[n]=l===0?100:100-100/(1+g/l);
+  for(let i=n+1;i<a.length;i++){const d=a[i]-a[i-1];g=(g*(n-1)+Math.max(d,0))/n;l=(l*(n-1)+Math.max(-d,0))/n;o[i]=l===0?100:100-100/(1+g/l)}
+  return o;
+}
+const pct=(a,b)=>(b&&isFinite(b))?(a/b-1)*100:null;
+function pivots(arr,w,type,from){
+  const out=[];
+  for(let k=Math.max(w,from);k<arr.length-w;k++){
+    let ok=true;
+    for(let j=1;j<=w;j++){
+      if(type==='h'?(arr[k]<=arr[k-j]||arr[k]<=arr[k+j]):(arr[k]>=arr[k-j]||arr[k]>=arr[k+j])){ok=false;break}
+    }
+    if(ok)out.push(k);
+  }
+  return out;
+}
+function fibCalc(h,l,c,look=120){
+  const n=c.length,st=Math.max(0,n-look);
+  let hi=-Infinity,hiI=-1,lo=Infinity,loI=-1;
+  for(let k=st;k<n;k++){if(h[k]>hi){hi=h[k];hiI=k}if(l[k]<lo){lo=l[k];loI=k}}
+  const range=hi-lo;
+  if(!(range>0)||range/lo<0.15)return null;
+  const up=loI<hiI;
+  const ratios=[0,0.236,0.382,0.5,0.618,0.786,1];
+  const levels=ratios.map(r=>({r,p:up?hi-r*range:lo+r*range}));
+  const price=c[n-1];
+  const ratio=up?(hi-price)/range:(price-lo)/range;
+  const ext=up?[1.272,1.618].map(e=>({r:e,p:lo+e*range})):[1.272,1.618].map(e=>({r:e,p:hi-e*range}));
+  return {up,hi,lo,hiI,loI,levels,ratio,ext};
+}
+const TF_CFG={
+  D:{key:'D',name:'Daily',unit:'day',u:'d',per:[20,50,100,200],slopeBars:5,fibLook:120,pivW:4,divLook:120,divSep:6,divRecent:30,crossRecent:30,show:200,interval:'1d',chgBars:7,chgLabel:'7d',fmt:{month:'short',day:'numeric'}},
+  W:{key:'W',name:'Weekly',unit:'week',u:'w',per:[20,50,100,200],slopeBars:3,fibLook:52,pivW:3,divLook:80,divSep:4,divRecent:12,crossRecent:12,show:156,interval:'1w',chgBars:4,chgLabel:'4w',fmt:{month:'short',year:'2-digit'}},
+  M:{key:'M',name:'Monthly',unit:'month',u:'mo',per:[6,12,18,24],slopeBars:2,fibLook:24,pivW:2,divLook:36,divSep:3,divRecent:6,crossRecent:6,show:60,interval:'1M',chgBars:3,chgLabel:'3mo',fmt:{month:'short',year:'2-digit'}}
+};
+const TFS=['D','W','M'];
+function divergences(h,l,r,cfg=TF_CFG.D){
+  const n=h.length,from=Math.max(16,n-cfg.divLook),out=[];
+  const lows=pivots(l,cfg.pivW,'l',from),highs=pivots(h,cfg.pivW,'h',from);
+  const chk=(a,b)=>b-a>=cfg.divSep&&r[a]!=null&&r[b]!=null&&n-1-b<=cfg.divRecent;
+  if(lows.length>=2){
+    const a=lows[lows.length-2],b=lows[lows.length-1];
+    if(chk(a,b)){
+      if(l[b]<l[a]&&r[b]>r[a]+1.5)out.push({dir:1,hidden:false,a,b,on:'l',kind:'Regular bullish'});
+      else if(l[b]>l[a]&&r[b]<r[a]-1.5)out.push({dir:1,hidden:true,a,b,on:'l',kind:'Hidden bullish'});
+    }
+  }
+  if(highs.length>=2){
+    const a=highs[highs.length-2],b=highs[highs.length-1];
+    if(chk(a,b)){
+      if(h[b]>h[a]&&r[b]<r[a]-1.5)out.push({dir:-1,hidden:false,a,b,on:'h',kind:'Regular bearish'});
+      else if(h[b]<h[a]&&r[b]>r[a]+1.5)out.push({dir:-1,hidden:true,a,b,on:'h',kind:'Hidden bearish'});
+    }
+  }
+  return out;
+}
+function fmtP(p){
+  if(p==null||!isFinite(p))return '—';
+  if(p>=1)return p.toLocaleString(undefined,{maximumFractionDigits:2});
+  return p.toFixed(Math.min(10,Math.max(2,2-Math.floor(Math.log10(p)))));
+}
+// a.s20 / s50 / s100 / s200 hold the four EMAs (fast, mid, mid-slow, slow) of the chosen timeframe
+function analyze(d,cfg=TF_CFG.D){
+  const c=d.c,n=c.length,i=n-1,P0=cfg.per[0],P1=cfg.per[1],P2=cfg.per[2],P3=cfg.per[3],U=cfg.unit;
+  const s20=ema(c,P0),s50=ema(c,P1),s100=ema(c,P2),s200=ema(c,P3),r=rsi(c,14);
+  const a={cfg,price:c[i],ch7:pct(c[i],c[i-cfg.chgBars]),s20,s50,s100,s200,r,rsi:r[i]};
+  const f={};
+  // fast EMA readout (informational, not scored on its own)
+  if(s20[i]!=null){
+    const val=s20[i],dist=pct(c[i],val),above=c[i]>=val;
+    let streak=0;for(let k=i;k>=0&&s20[k]!=null&&((c[k]>=s20[k])===above);k--)streak++;
+    const sb=cfg.slopeBars,slope=s20[i-sb]!=null?pct(val,s20[i-sb]):null;
+    a.e20={val,dist,above,streak,slope,rising:slope!=null&&slope>0,near:Math.abs(dist)<=2,
+      text:`The ${P0}-${U} EMA is at $${fmtP(val)}. Price ($${fmtP(c[i])}) is ${Math.abs(dist).toFixed(1)}% ${above?'above':'below'} it. `+
+        (streak===1?`This is the first close ${above?'back above':'below'} it — a fresh ${above?'reclaim':'loss'} of the ${P0} EMA. `:`Price has closed ${above?'above':'below'} it ${streak} ${U}${streak===1?'':'s'} in a row. `)+
+        (slope==null?'':`The EMA itself is ${slope>0?'rising':'falling'} (${slope>0?'+':''}${slope.toFixed(1)}% over ${sb} ${U}s). `)+
+        (Math.abs(dist)<=2?`Price is within 2% of it, so it is being tested right now as ${above?'support':'resistance'}.`:'')};
+  }else a.e20=null;
+  // slow EMA
+  if(s200[i]!=null){
+    const g=pct(c[i],s200[i]);
+    f.t200={name:`${P3}-${U} EMA`,v:g>=0?1:-1,short:(g>=0?'Above ':'Below ')+Math.abs(g).toFixed(0)+'%',
+      text:`Price is ${Math.abs(g).toFixed(1)}% ${g>=0?'above':'below'} the ${P3}-${U} EMA — ${g>=0?'uptrend':'downtrend'} on the ${cfg.name.toLowerCase()} chart.`};
+  }else f.t200={name:`${P3}-${U} EMA`,v:0,short:'n/a',text:`Not enough history for a ${P3}-${U} EMA (needs ${P3} ${U}s of data).`};
+  // 50/200 cross
+  if(s50[i]!=null&&s200[i]!=null){
+    const bull=s50[i]>s200[i];let ago=null;
+    for(let k=i;k>=Math.max(P3+1,i-cfg.crossRecent);k--){
+      if((s50[k]>s200[k])!==(s50[k-1]>s200[k-1])){ago=i-k;break}
+    }
+    f.cross={name:`${P1}/${P3} EMA`,v:bull?1:-1,short:ago!=null?((bull?'Golden':'Death')+' x '+ago+cfg.u):(bull?`${P1} > ${P3}`:`${P1} < ${P3}`),
+      text:ago!=null?`${bull?'Golden':'Death'} cross happened ${ago} ${U}${ago===1?'':'s'} ago (${P1}-${U} EMA crossed ${bull?'above':'below'} the ${P3}-${U}).`:`The ${P1}-${U} EMA is ${bull?'above':'below'} the ${P3}-${U} (${bull?'golden-cross':'death-cross'} state).`};
+  }else f.cross={name:`${P1}/${P3} EMA`,v:0,short:'n/a',text:'Not enough history for this comparison.'};
+  // full EMA stack: price > 20 > 50 > 100 > 200 (or fully reversed)
+  if(s20[i]!=null&&s50[i]!=null&&s100[i]!=null&&s200[i]!=null){
+    const bu=c[i]>s20[i]&&s20[i]>s50[i]&&s50[i]>s100[i]&&s100[i]>s200[i];
+    const be=c[i]<s20[i]&&s20[i]<s50[i]&&s50[i]<s100[i]&&s100[i]<s200[i];
+    f.short={name:`EMA stack ${P0}/${P1}/${P2}/${P3}`,v:bu?1:be?-1:0,short:bu?'Stacked up':be?'Stacked down':'Mixed',
+      text:bu?`Price > ${P0} > ${P1} > ${P2} > ${P3} EMA: every average is in bullish order.`:be?`Price < ${P0} < ${P1} < ${P2} < ${P3} EMA: every average is in bearish order.`:`The ${P0}/${P1}/${P2}/${P3} EMAs and price are not fully in order — no clean trend stack.`};
+  }else f.short={name:`EMA stack ${P0}/${P1}/${P2}/${P3}`,v:0,short:'n/a',text:'Not enough history for the full EMA stack.'};
+  // RSI
+  const rv=a.rsi;
+  f.rsi={name:'RSI (14)',v:rv==null?0:rv<30?1:rv>70?-1:0,short:rv==null?'n/a':rv.toFixed(0),
+    text:rv==null?'Not enough history.':rv<30?`RSI ${rv.toFixed(0)} — oversold, bounce potential.`:rv>70?`RSI ${rv.toFixed(0)} — overbought, pullback risk.`:`RSI ${rv.toFixed(0)} — neutral range.`};
+  // Fibonacci
+  const fb=fibCalc(d.h,d.l,c,cfg.fibLook);a.fib=fb;
+  if(fb){
+    const rt=fb.ratio,inZone=rt>=0.37&&rt<=0.8;
+    const pocket=rt>=0.6&&rt<=0.67;
+    let v=0,short='',text='';
+    const sw=`${fmtP(fb.lo)} → ${fmtP(fb.hi)}`;
+    if(fb.up){
+      if(inZone){v=1;short=(rt).toFixed(3)+(pocket?' ★pocket':' dip zone');text=`Up-swing ${sw}. Price has retraced ${(rt*100).toFixed(1)}% of it — inside the 0.382–0.786 dip-buy zone${pocket?' (golden pocket)':''}.`}
+      else if(rt<0.37){short=rt.toFixed(3)+' near high';text=`Up-swing ${sw}. Price is only ${(rt*100).toFixed(1)}% off the swing high — shallow pullback, no retracement entry yet.`}
+      else{short=rt.toFixed(3)+' deep';text=`Up-swing ${sw}. Price has given back ${(rt*100).toFixed(1)}% — deeper than 0.786, the up-swing is at risk of failing.`}
+    }else{
+      if(inZone){v=-1;short=(rt).toFixed(3)+(pocket?' ★pocket':' resist');text=`Down-swing ${sw}. Price has bounced ${(rt*100).toFixed(1)}% of it — inside the 0.382–0.786 resistance zone${pocket?' (golden pocket)':''}.`}
+      else if(rt<0.37){short=rt.toFixed(3)+' near low';text=`Down-swing ${sw}. Price is hugging the swing low — watch for a reversal or a breakdown.`}
+      else{short=rt.toFixed(3)+' strong';text=`Down-swing ${sw}. Price has recovered ${(rt*100).toFixed(1)}% — above 0.786, sellers are losing control.`}
+    }
+    f.fib={name:'Fibonacci',v,short,text,inZone};
+  }else f.fib={name:'Fibonacci',v:0,short:'no swing',text:`No clear swing (≥15% range) in the last ${cfg.fibLook} ${U}s.`,inZone:false};
+  // Divergence
+  const dv=divergences(d.h,d.l,a.r,cfg);a.divs=dv;
+  if(dv.length){
+    let v=0;const parts=[],shorts=[];
+    dv.forEach(x=>{
+      v+=x.dir*(x.hidden?1:2);
+      const arr=x.on==='l'?d.l:d.h;
+      parts.push(`${x.kind} divergence: price ${x.on==='l'?'low':'high'} ${fmtP(arr[x.a])} → ${fmtP(arr[x.b])} while RSI ${a.r[x.a].toFixed(0)} → ${a.r[x.b].toFixed(0)} (${n-1-x.b} ${U}${n-1-x.b===1?'':'s'} ago).`);
+      shorts.push((x.hidden?'Hid ':'')+(x.dir>0?'Bull':'Bear')+' '+(n-1-x.b)+cfg.u);
+    });
+    f.div={name:'Divergence',v,short:shorts.join(' · '),text:parts.join(' ')};
+  }else f.div={name:'Divergence',v:0,short:'—',text:`No RSI divergence between the last two swing points in the last ${cfg.divRecent} ${U}s.`};
+  a.f=f;
+  a.score=Object.values(f).reduce((s,x)=>s+x.v,0);
+  a.label=a.score>=4?'STRONG BULLISH':a.score>=2?'BULLISH':a.score<=-4?'STRONG BEARISH':a.score<=-2?'BEARISH':'NEUTRAL';
+  a.cls=a.score>=4?'sb':a.score>=2?'b':a.score<=-4?'sr':a.score<=-2?'r':'n';
+  return a;
+}
+
+/* ---------- Backtest engine (pure functions) ---------- */
+function maxDD(eq){let pk=-Infinity,dd=0;for(const v of eq){if(v>pk)pk=v;const d=v/pk-1;if(d<dd)dd=d}return dd}
+// decide(t,inPos) is evaluated on the close of day t using data up to t; the trade happens at the close of day t+1.
+function simulate(c,start,decide,cost,alloc){
+  const n=c.length;let cash=alloc,units=0,inPos=false,basis=alloc,pending=null,held=0;
+  const eq=[],trades=[];
+  for(let t=start;t<n;t++){
+    if(pending!==null){
+      if(pending&&!inPos){basis=cash;units=cash*(1-cost)/c[t];cash=0;inPos=true}
+      else if(!pending&&inPos){cash=units*c[t]*(1-cost);units=0;inPos=false;trades.push({r:cash/basis-1,open:false})}
+      pending=null;
+    }
+    eq.push(cash+units*c[t]);
+    if(inPos)held++;
+    if(t<n-1){const want=decide(t,inPos);if(want!==inPos)pending=want}
+  }
+  if(inPos){cash=units*c[n-1]*(1-cost);trades.push({r:cash/basis-1,open:true});eq[eq.length-1]=cash}
+  return {eq,final:cash,ret:cash/alloc-1,trades,inMkt:held/eq.length,mdd:maxDD(eq)};
+}
+function backtestToken(d,cost,alloc,cfg=TF_CFG.D){
+  const D=Array.isArray(d)?{c:d,h:d,l:d}:d,c=D.c,n=c.length,P0=cfg.per[0],P1=cfg.per[1],P3=cfg.per[3],start=P3,WIN=400;
+  const sc=new Array(n).fill(null);
+  for(let t=start;t<n-1;t++){
+    const f=Math.max(0,t-WIN+1);
+    sc[t]=analyze({c:c.slice(f,t+1),h:D.h.slice(f,t+1),l:D.l.slice(f,t+1)},cfg).score;
+  }
+  const sSlow=ema(c,P3),sMid=ema(c,P1);
+  const hh=t=>{let m=-Infinity;for(let k=t-P0;k<t;k++)if(c[k]>m)m=c[k];return m};
+  const A=simulate(c,start,(t,inPos)=>inPos?sc[t]>0:sc[t]>=2,cost,alloc);
+  const B=simulate(c,start,(t,inPos)=>inPos?c[t]>=sMid[t]:(c[t]>sSlow[t]&&c[t]>=hh(t)),cost,alloc);
+  const H=simulate(c,start,()=>true,cost,alloc);
+  return {n,days:n-start,start,A,B,H,t:D.t||null};
+}
+function yearly(tot,ts){
+  const m=new Map();
+  for(let i=0;i<tot.length;i++){const y=new Date(ts[i]).getUTCFullYear();if(!m.has(y))m.set(y,[i,i]);else m.get(y)[1]=i}
+  return [...m].map(([y,[f,l]])=>({y,from:f>0?tot[f-1]:tot[0],to:tot[l]}));
+}
+function aggregate(rows,key,alloc){
+  const W=Math.max(...rows.map(r=>r[key].eq.length));
+  const tot=new Array(W).fill(0);
+  rows.forEach(r=>{const e=r[key].eq,pad=W-e.length;for(let i=0;i<W;i++)tot[i]+=i<pad?alloc:e[i-pad]});
+  const pnl=rows.reduce((s,r)=>s+(r[key].final-alloc),0);
+  const trades=rows.flatMap(r=>r[key].trades);
+  const wins=trades.filter(t=>t.r>0).length;
+  const avgInMkt=rows.reduce((s,r)=>s+r[key].inMkt,0)/rows.length;
+  return {tot,pnl,ret:pnl/(alloc*rows.length),trades:trades.length,win:trades.length?wins/trades.length:null,pos:rows.filter(r=>r[key].ret>0).length,mdd:maxDD(tot),inMkt:avgInMkt};
+}
+const STABLE=new Set(['usdt','usdc','dai','usde','usds','busd','tusd','fdusd','pyusd','usdd','usdy','usd1','susds','susde','usdtb','usdg','rlusd','paxg','xaut','wbtc','weth','steth','wsteth','weeth','cbbtc','reth','wbeth','cbeth','ezeth','rseth','lbtc','solvbtc','tbtc','usdt0','frxusd','buidl','ousg','usdf','eusd','gusd','lusd','crvusd','jitosol','msol','bnsol','jupsol','bsc-usd','usdc.e','usdb']);
+const PEG_RE=/(wrapped|staked|bridged|binance-peg|liquid-staking|restaked|stablecoin|usd-coin|tether)/;
+function stableLike(c){
+  const m=c.reduce((s,v)=>s+v,0)/c.length;if(m<0.95||m>1.05)return false;
+  const r=[];for(let i=1;i<c.length;i++)r.push(c[i]/c[i-1]-1);
+  const mu=r.reduce((s,v)=>s+v,0)/r.length,sd=Math.sqrt(r.reduce((s,v)=>s+(v-mu)*(v-mu),0)/r.length);
+  return sd<0.006;
+}
+
+/* ---------- Data fetching ---------- */
+async function fetchRetry(url,setMsg){
+  for(let t=0;t<4;t++){
+    const r=await fetch(url);
+    if(r.ok)return r;
+    if(r.status===429){const w=20*(t+1);for(let s=w;s>0;s--){setMsg&&setMsg(`Rate limited — waiting ${s}s…`);await sleep(1000)}continue}
+    throw new Error('HTTP '+r.status);
+  }
+  throw new Error('Rate limited — try again in a minute (a free CoinGecko demo key helps)');
+}
+async function fetchCG(t,setMsg){
+  const key=($('#cgKey').value||'').trim();
+  const url=`https://api.coingecko.com/api/v3/coins/${t.id}/market_chart?vs_currency=usd&days=365&interval=daily`+(key?`&x_cg_demo_api_key=${encodeURIComponent(key)}`:'');
+  const j=await (await fetchRetry(url,setMsg)).json();
+  if(!j.prices||j.prices.length<30)throw new Error('Not enough history');
+  return {t:j.prices.map(x=>x[0]),c:j.prices.map(x=>x[1])};
+}
+async function fetchGT(t,setMsg){
+  const pj=await (await fetchRetry(`https://api.geckoterminal.com/api/v2/networks/${t.net}/tokens/${t.addr}/pools?page=1`,setMsg)).json();
+  if(!pj.data||!pj.data.length)throw new Error('No pools found for that address');
+  const pool=pj.data[0].attributes.address;
+  await sleep(2200);
+  const oj=await (await fetchRetry(`https://api.geckoterminal.com/api/v2/networks/${t.net}/pools/${pool}/ohlcv/day?aggregate=1&limit=365&currency=usd&token=${t.addr}`,setMsg)).json();
+  const list=(oj.data&&oj.data.attributes&&oj.data.attributes.ohlcv_list||[]).slice().reverse();
+  if(list.length<30)throw new Error('Not enough history ('+list.length+' days)');
+  return {t:list.map(x=>x[0]*1000),h:list.map(x=>+x[2]),l:list.map(x=>+x[3]),c:list.map(x=>+x[4]),pool};
+}
+const expand=r=>({t:r.t,c:r.c,h:r.h||r.c,l:r.l||r.c,pool:r.pool});
+
+/* ---------- Binance public market data (free, no key) ---------- */
+const BN_HOSTS=['https://data-api.binance.vision','https://api.binance.com','https://api.binance.us'];
+let bnHost=null,bnSymbols=null;
+async function bnProbe(msg){
+  for(const h of BN_HOSTS){
+    try{
+      msg&&msg('Checking Binance data access ('+h.replace('https://','')+')…');
+      const r=await fetch(h+'/api/v3/ticker/price');
+      if(!r.ok)continue;
+      const j=await r.json();
+      if(Array.isArray(j)&&j.length){bnHost=h;bnSymbols=new Set(j.map(x=>x.symbol));return true}
+    }catch(e){}
+  }
+  return false;
+}
+async function bnKlines(sym,bars,interval,incOpen,setMsg){
+  let out=[],end=null;const want=bars+(incOpen?0:1);   // +1 because the unfinished candle is dropped below
+  while(out.length<want){
+    const lim=Math.min(1000,want-out.length);
+    const r=await fetchRetry(`${bnHost}/api/v3/klines?symbol=${sym}&interval=${interval}&limit=${lim}`+(end?`&endTime=${end}`:''),setMsg);
+    const k=await r.json();
+    if(!Array.isArray(k)||!k.length)break;
+    out=k.concat(out);end=k[0][0]-1;
+    if(k.length<lim)break;
+    await sleep(120);
+  }
+  const now=Date.now(),done=incOpen?out:out.filter(k=>k[6]<now);
+  return {t:done.map(k=>k[0]),h:done.map(k=>+k[2]),l:done.map(k=>+k[3]),c:done.map(k=>+k[4])};
+}
+
+/* ---------- Scan ---------- */
+function setStatus(msg,p){$('#status').textContent=msg||'';if(p!=null)$('#prog').style.width=(p*100)+'%'}
+const binPair=t=>String(t.sym).toUpperCase()+'USDT';
+function analyzeAll(rec){
+  const out={};
+  TFS.forEach(k=>{
+    const cfg=TF_CFG[k],d=rec.tf&&rec.tf[k];
+    if(!d||!d.c){out[k]={err:`No ${cfg.name.toLowerCase()} data for this token (needs Binance access and a Binance-listed ticker)`};return}
+    if(d.c.length<30){out[k]={err:`Not enough ${cfg.name.toLowerCase()} history (${d.c.length} bars)`};return}
+    try{const dd={t:d.t,c:d.c,h:d.h||d.c,l:d.l||d.c};out[k]={d:dd,a:analyze(dd,cfg)}}catch(e){out[k]={err:e.message||String(e)}}
+  });
+  return out;
+}
+async function scan(force){
+  if(scanning||btRunning)return;scanning=true;$('#scanBtn').disabled=true;
+  const list=tokens();let done=0;
+  const hasKey=!!($('#cgKey').value||'').trim(),incOpen=!!$('#incOpen').checked;
+  setStatus('Checking Binance data access…',0);
+  const bnOk=await bnProbe(x=>setStatus(x,0));
+  for(const t of list){
+    setStatus(`Scanning ${t.sym} (${done+1}/${list.length})…`,done/list.length);
+    let slowFetch=false;
+    try{
+      let rec=cache[t.key];
+      const stale=!rec||Date.now()-rec.ts>CACHE_MS||(rec.src==='bn'&&rec.open!==incOpen)||(bnOk&&t.src==='cg'&&rec.src!=='bn'&&bnSymbols.has(binPair(t)));
+      if(force||stale){
+        const m=x=>setStatus(`${t.sym}: ${x}`);
+        if(bnOk&&t.src==='cg'&&bnSymbols.has(binPair(t))){
+          const pair=binPair(t),tf={};
+          tf.D=await bnKlines(pair,730,'1d',incOpen,m);await sleep(100);
+          tf.W=await bnKlines(pair,520,'1w',incOpen,m);await sleep(100);
+          tf.M=await bnKlines(pair,130,'1M',incOpen,m);await sleep(100);
+          rec={ts:Date.now(),src:'bn',open:incOpen,tf};
+        }else{
+          const d=await (t.src==='cg'?fetchCG(t,m):fetchGT(t,m));
+          rec={ts:Date.now(),src:t.src,open:incOpen,tf:{D:d,W:null,M:null}};slowFetch=true;
+        }
+        cache[t.key]=rec;
+      }
+      results[t.key]={t,tf:analyzeAll(rec),ts:rec.ts,src:rec.src};
+    }catch(e){results[t.key]={t,err:e.message||String(e)}}
+    done++;render();
+    if(slowFetch&&done<list.length)await sleep(t.src==='cg'&&!hasKey?5500:2300);
+  }
+  LS.set('bws_cache_v2',cache);
+  updateLog();
+  setStatus(`Scan complete — ${list.length} tokens${bnOk?' (Binance data where listed)':' (Binance not reachable: daily data only)'}.`,1);
+  $('#lastScan').textContent='Last scan: '+new Date().toLocaleString();
+  LS.set('bws_lastscan',Date.now());
+  scanning=false;$('#scanBtn').disabled=false;
+  renderLog();if(selected)showDetail(selected,true);
+}
+function loadCached(){
+  tokens().forEach(t=>{
+    const rec=cache[t.key];
+    if(rec&&rec.tf){try{results[t.key]={t,tf:analyzeAll(rec),ts:rec.ts,src:rec.src}}catch(e){}}
+  });
+  const ls=LS.get('bws_lastscan',null);
+  if(ls)$('#lastScan').textContent='Last scan: '+new Date(ls).toLocaleString()+' (cached)';
+}
+
+/* ---------- Table ---------- */
+const cc=v=>v==null?'mu':v>0?'up':v<0?'dn':'mu';
+const vc=v=>v>0?'up':v<0?'dn':'mu';
+const cur=()=>TF_CFG[curTf];
+const tfr=r=>r&&r.tf?r.tf[curTf]:null;
+function updateHead(){const c=cur();$('#thE20').textContent=`${c.per[0]}-${c.unit} EMA`;$('#thTrend').textContent=`${c.per[3]}-${c.unit} EMA`;$('#thCross').textContent=`${c.per[1]}/${c.per[3]} EMA`;$('#thChg').textContent=c.chgLabel}
+function mtf(r){
+  return TFS.map(k=>{
+    const x=r.tf&&r.tf[k];
+    if(!x||!x.a)return `<span class="mtf" title="${TF_CFG[k].name}: no data">${k}</span>`;
+    return `<span class="mtf ${x.a.cls}" title="${TF_CFG[k].name}: ${x.a.label} (${x.a.score>0?'+':''}${x.a.score})">${k}</span>`;
+  }).join('');
+}
+function render(){
+  updateHead();
+  let rows=tokens().map(t=>results[t.key]||{t,pending:true});
+  const A=r=>{const x=tfr(r);return x&&x.a?x.a:null};
+  rows=rows.filter(r=>{
+    if(filter==='all')return true;
+    if(filter==='align')return !!r.tf&&TFS.every(k=>r.tf[k]&&r.tf[k].a&&r.tf[k].a.score>=2);
+    const a=A(r);if(!a)return false;
+    if(filter==='near')return !!a.e20&&a.e20.near;
+    if(filter==='bull')return a.score>=2;
+    if(filter==='bear')return a.score<=-2;
+    if(filter==='div')return a.divs.length>0;
+    if(filter==='fib')return a.f.fib.inZone;
+  });
+  const sv=r=>A(r)?A(r).score:-99;
+  rows.sort((x,y)=>{
+    if(sortBy==='sym')return x.t.sym.localeCompare(y.t.sym);
+    if(sortBy==='ch7')return (A(y)?A(y).ch7:-1e9)-(A(x)?A(x).ch7:-1e9);
+    if(sortBy==='scoreAsc')return (A(x)?A(x).score:99)-(A(y)?A(y).score:99);
+    return sv(y)-sv(x);
+  });
+  $('#tbody').innerHTML=rows.map(r=>{
+    const t=r.t;
+    const tvUrl='https://www.tradingview.com/chart/?symbol='+encodeURIComponent(t.tv||(t.sym+'USD'));
+    const tvLink=`<td><a href="${tvUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()">TV ↗</a></td>`;
+    const srcName=r.src==='bn'?'Binance':t.src==='gt'?'GeckoTerminal':'CoinGecko';
+    const sym=`<td class="sym">${esc(t.sym)}<small>${srcName}${t.custom?`<span class="x" data-del="${esc(t.key)}" title="Remove">✕</span>`:''}</small></td>`;
+    if(r.err)return `<tr class="row">${sym}<td colspan="10" class="err">${esc(r.err)}</td><td></td>${tvLink}</tr>`;
+    const x=tfr(r);
+    if(!x)return `<tr class="row">${sym}<td colspan="10" class="mu">Waiting for scan…</td><td></td>${tvLink}</tr>`;
+    if(!x.a)return `<tr class="row">${sym}<td colspan="10" class="mu">${esc(x.err||'No data')}</td><td>${mtf(r)}</td>${tvLink}</tr>`;
+    const a=x.a,f=a.f;
+    return `<tr class="row ${selected===t.key?'sel':''}" data-key="${esc(t.key)}">${sym}
+      <td class="mono">$${fmtP(a.price)}</td>
+      <td class="mono ${cc(a.ch7)}">${a.ch7==null?'—':(a.ch7>0?'+':'')+a.ch7.toFixed(1)+'%'}</td>
+      <td class="mono ${a.e20?(a.e20.above?'up':'dn'):'mu'}" style="${a.e20&&a.e20.near?'background:#2a1a0c;color:#fdba74':''}">${a.e20?'$'+fmtP(a.e20.val)+' <span style="opacity:.8">('+(a.e20.dist>0?'+':'')+a.e20.dist.toFixed(1)+'%)</span>':'n/a'}</td>
+      <td class="${vc(f.t200.v)}">${f.t200.short}</td>
+      <td class="${vc(f.cross.v)}">${f.cross.short}</td>
+      <td class="${vc(f.rsi.v)} mono">${f.rsi.short}</td>
+      <td class="${vc(f.fib.v)}">${f.fib.short}</td>
+      <td class="${vc(f.div.v)}">${f.div.short}</td>
+      <td class="score ${vc(a.score)}">${a.score>0?'+':''}${a.score}</td>
+      <td><span class="sig ${a.cls}">${a.label}</span></td>
+      <td>${mtf(r)}</td>${tvLink}</tr>`;
+  }).join('');
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+/* ---------- Chart UI state ---------- */
+const ZOOMS={D:[60,120,200,365,0],W:[26,52,104,156,0],M:[12,24,36,60,0]};   // bars to show; 0 = all history
+let chartUI=LS.get('bws_chartui',{});if(!chartUI||typeof chartUI!=='object')chartUI={};if(!chartUI.zoom)chartUI.zoom={};
+const saveUI=()=>LS.set('bws_chartui',chartUI);
+let hoverIdx=null,dlgTf=null,views={};
+const viewFor=tf=>views[tf]||(views[tf]={bars:null,off:0,ys:1,yc:0});
+const viewMoved=v=>v.bars!=null||v.off||v.ys!==1||v.yc;
+const zoomFor=tf=>chartUI.zoom[tf]==null?TF_CFG[tf].show:chartUI.zoom[tf];
+const logLabel=()=>chartUI.log==null?'auto':chartUI.log?'on':'off';
+function toolbarHtml(tf,expandBtn){
+  const cfg=TF_CFG[tf],z=zoomFor(tf);
+  const btns=ZOOMS[tf].map(b=>`<button class="zb ${b===z?'on':''}" data-zoom="${b}" title="${b?('Show the last '+b+' '+cfg.unit+'s'):'Show all available history'}">${b?b+cfg.u:'All'}</button>`).join('');
+  return `<span class="mu" style="font-size:12px">Zoom</span>${btns}<button class="zb ${chartUI.log?'on':''}" data-log="1" title="Log scale makes huge old moves and small recent moves readable together. Auto switches it on when the price range is very wide.">Log: ${logLabel()}</button><button class="zb" data-reset="1" title="Reset the drag/stretch back to auto-fit">↺ Reset</button>${expandBtn?'<button class="zb exp" data-expand="1" title="Open the chart full screen">⤢ Expand</button>':''}`;
+}
+const chartOpts=(tf,big)=>{const v=viewFor(tf);return {bars:v.bars!=null?v.bars:zoomFor(tf),off:v.off,ys:v.ys,yc:v.yc,log:chartUI.log,hover:hoverIdx,big}};
+const legendHtml=(cfg)=>{const U=cfg.unit;return `<span style="color:#fb923c">━</span> <b style="color:#fdba74">${cfg.per[0]}-${U} EMA</b> &nbsp; <span style="color:#f0c75e">━</span> ${cfg.per[1]} &nbsp; <span style="color:#f472b6">━</span> ${cfg.per[2]} &nbsp; <span style="color:#7dd3fc">━</span> ${cfg.per[3]} EMA &nbsp; <span style="color:#d4a537">┅</span> Fibonacci &nbsp; <span class="up">━</span>/<span class="dn">━</span> divergence lines`};
+function drawInline(){
+  const r=selected&&results[selected],x=r&&r.tf?r.tf[curTf]:null,cv=$('#cv');
+  if(cv&&x&&x.a)drawChart(cv,x,chartOpts(curTf,false));
+}
+function drawDlg(){
+  const r=selected&&results[selected],x=r&&r.tf&&dlgTf?r.tf[dlgTf]:null,cv=$('#dcv');
+  if(cv&&x&&x.a)drawChart(cv,x,chartOpts(dlgTf,true));
+}
+const dlgOpen=()=>{const d=$('#chartDlg');return !!(d&&d.open)};
+function bindChart(cv,redraw,getTf){
+  if(!cv)return;
+  const zone=(e)=>{
+    const gm=cv._geo;if(!gm)return null;
+    const rc=cv.getBoundingClientRect(),x=e.clientX-rc.left,y=e.clientY-rc.top;
+    if(x>gm.plotR&&y<gm.pT+gm.pH+6)return 'price';
+    if(y>gm.rT+gm.rH&&x<=gm.plotR)return 'time';
+    if(x>gm.plotR)return 'none';
+    return 'plot';
+  };
+  const CUR={price:'ns-resize',time:'ew-resize',plot:'crosshair',none:'default'};
+  let drag=null;
+  cv.onpointerdown=e=>{
+    const z=zone(e);if(!z||z==='none')return;
+    if(e.pointerType==='mouse'&&e.button!==0)return;
+    const gm=cv._geo,v=viewFor(getTf());
+    drag={z,x:e.clientX,y:e.clientY,ys:v.ys,yc:v.yc,off:v.off,bars:v.bars!=null?v.bars:gm.show,moved:false};
+    try{cv.setPointerCapture(e.pointerId)}catch(_){}
+    hoverIdx=null;
+  };
+  cv.onpointermove=e=>{
+    const gm=cv._geo;if(!gm)return;
+    if(drag){
+      const v=viewFor(getTf()),dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+      if(Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;
+      if(drag.z==='price'){v.ys=Math.min(25,Math.max(0.04,drag.ys*Math.exp(-dy*0.006)))}   // drag down = stretch (zoom in), up = compress
+      else if(drag.z==='time'){v.bars=Math.round(Math.min(gm.nAll,Math.max(10,drag.bars*Math.exp(-dx*0.006))));v.off=Math.min(v.off,gm.nAll-v.bars)}
+      else{
+        const pxBar=(gm.plotR-gm.padL)/Math.max(1,gm.show-1);
+        v.off=Math.max(0,Math.min(gm.nAll-gm.show,Math.round(drag.off+dx/pxBar)));
+        v.yc=drag.yc+dy/gm.pH*drag.ys;
+      }
+      cv.style.cursor=drag.z==='plot'?'grabbing':CUR[drag.z];
+      redraw();return;
+    }
+    const z=zone(e);cv.style.cursor=CUR[z]||'crosshair';
+    if(z!=='plot'){if(hoverIdx!=null){hoverIdx=null;redraw()}return}
+    const rc=cv.getBoundingClientRect(),f=(e.clientX-rc.left-gm.padL)/(gm.plotR-gm.padL);
+    let i=gm.st+Math.round(f*(gm.show-1));i=Math.max(gm.st,Math.min(gm.st+gm.show-1,i));
+    if(i!==hoverIdx){hoverIdx=i;redraw()}
+  };
+  const end=e=>{if(drag){try{cv.releasePointerCapture(e.pointerId)}catch(_){}drag=null;cv.style.cursor=CUR[zone(e)]||'crosshair'}};
+  cv.onpointerup=end;cv.onpointercancel=end;
+  cv.onpointerleave=()=>{if(!drag){hoverIdx=null;redraw()}};
+  cv.onwheel=e=>{
+    const z=zone(e);if(z!=='price'&&z!=='time')return;
+    e.preventDefault();const v=viewFor(getTf()),gm=cv._geo,k=Math.exp(e.deltaY*0.0015);
+    if(z==='price')v.ys=Math.min(25,Math.max(0.04,v.ys*k));
+    else{const b=v.bars!=null?v.bars:gm.show;v.bars=Math.round(Math.min(gm.nAll,Math.max(10,b*k)));v.off=Math.min(v.off,gm.nAll-v.bars)}
+    redraw();
+  };
+  cv.ondblclick=e=>{
+    const z=zone(e),tf=getTf(),v=viewFor(tf);
+    if(z==='price'){v.ys=1;v.yc=0;redraw()}
+    else if(z==='time'){v.bars=null;v.off=0;redraw()}
+    else if(z==='plot'){if(viewMoved(v)){views[tf]={bars:null,off:0,ys:1,yc:0};redraw()}else if(cv.id==='cv')openChartDlg()}
+  };
+}
+function refreshChartUI(){
+  const tb=$('#ctb');if(tb&&selected)tb.innerHTML=toolbarHtml(curTf,true);
+  drawInline();
+  if(dlgOpen())renderDlg();
+}
+function chartClick(e){
+  const b=e.target&&e.target.closest?e.target.closest('button'):null;if(!b)return;
+  const inDlg=!!b.closest('#chartDlg'),tf=inDlg?dlgTf:curTf;
+  if(b.dataset.zoom!=null){chartUI.zoom[tf]=+b.dataset.zoom;const v=viewFor(tf);v.bars=null;v.off=0;saveUI();refreshChartUI()}
+  else if(b.dataset.reset){views[tf]={bars:null,off:0,ys:1,yc:0};refreshChartUI()}
+  else if(b.dataset.log){chartUI.log=chartUI.log==null?true:chartUI.log===true?false:null;saveUI();refreshChartUI()}
+  else if(b.dataset.expand){openChartDlg()}
+  else if(b.dataset.tf){dlgTf=b.dataset.tf;hoverIdx=null;renderDlg()}
+  else if(b.dataset.close){closeDlg()}
+}
+function renderDlg(){
+  const dlg=$('#chartDlg'),r=selected&&results[selected];if(!r||!r.tf)return;
+  if(!(r.tf[dlgTf]&&r.tf[dlgTf].a))dlgTf=TFS.find(k=>r.tf[k]&&r.tf[k].a);
+  const x=r.tf[dlgTf];if(!x||!x.a)return;
+  const a=x.a,cfg=a.cfg,U=cfg.unit;
+  dlg.innerHTML=`
+    <div class="dhead">
+      <div><span class="dsym">${esc(r.t.sym)}</span> <span class="mono" style="font-size:18px">$${fmtP(a.price)}</span> <span class="sig ${a.cls}" style="margin-left:6px">${a.label} (${a.score>0?'+':''}${a.score})</span> <span class="mu mono" style="margin-left:8px;font-size:13px">${cfg.name} chart</span></div>
+      <div class="dtabs">${TFS.map(k=>`<button class="zb ${k===dlgTf?'on':''}" data-tf="${k}" ${r.tf[k]&&r.tf[k].a?'':'disabled'}>${TF_CFG[k].name}</button>`).join('')}<button class="zb exp" data-close="1" style="margin-left:10px">✕ Close</button></div>
+    </div>
+    <div class="ctb">${toolbarHtml(dlgTf,false)}<span class="mu" style="font-size:12px;margin-left:8px">Drag the price numbers (right) to stretch up/down · drag the dates (bottom) to zoom · drag the chart to move it · double-click to reset · Esc closes.</span></div>
+    ${a.e20?`<div class="e20line"><b>${cfg.per[0]}-${U} EMA $${fmtP(a.e20.val)}</b> · price ${a.e20.above?'above':'below'} by ${Math.abs(a.e20.dist).toFixed(1)}% · ${a.e20.streak} ${U}${a.e20.streak===1?'':'s'} on this side${a.e20.slope==null?'':' · EMA '+(a.e20.rising?'rising':'falling')}</div>`:''}
+    <div class="cwrap"><canvas id="dcv"></canvas></div>
+    <div class="mu mono" style="font-size:12px">${legendHtml(cfg)}</div>`;
+  bindChart($('#dcv'),drawDlg,()=>dlgTf);
+  requestAnimationFrame(drawDlg);
+}
+function openChartDlg(){
+  const dlg=$('#chartDlg'),r=selected&&results[selected];if(!dlg||!r||!r.tf)return;
+  dlgTf=(r.tf[curTf]&&r.tf[curTf].a)?curTf:TFS.find(k=>r.tf[k]&&r.tf[k].a);
+  if(!dlgTf)return;
+  hoverIdx=null;
+  if(dlg.showModal){if(!dlg.open)dlg.showModal()}else if(dlg.setAttribute)dlg.setAttribute('open','');
+  renderDlg();
+}
+function closeDlg(){const dlg=$('#chartDlg');hoverIdx=null;if(dlg&&dlg.close)dlg.close();else if(dlg&&dlg.removeAttribute)dlg.removeAttribute('open')}
+
+/* ---------- Detail panel ---------- */
+const GT_NET={'ethereum':'eth','solana':'solana','base':'base','arbitrum-one':'arbitrum','avalanche':'avax','binance-smart-chain':'bsc','optimistic-ethereum':'optimism','polygon-pos':'polygon_pos'};
+const gtCache={};
+async function gtLink(t){
+  if(t.src==='gt')return `https://www.geckoterminal.com/${t.net}/tokens/${t.addr}`;
+  if(gtCache[t.id]!==undefined)return gtCache[t.id];
+  try{
+    const key=($('#cgKey').value||'').trim();
+    const j=await (await fetch(`https://api.coingecko.com/api/v3/coins/${t.id}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false`+(key?`&x_cg_demo_api_key=${encodeURIComponent(key)}`:''))).json();
+    const p=j.platforms||{};
+    for(const k of ['solana','ethereum','base','arbitrum-one','avalanche','binance-smart-chain','optimistic-ethereum','polygon-pos']){
+      if(p[k]&&GT_NET[k]){gtCache[t.id]=`https://www.geckoterminal.com/${GT_NET[k]}/tokens/${p[k]}`;return gtCache[t.id]}
+    }
+  }catch(e){}
+  gtCache[t.id]=null;return null;
+}
+function showDetail(key,noScroll){
+  const r=results[key],x=tfr(r);if(!r||!x||!x.a)return;
+  selected=key;render();
+  const t=r.t,a=x.a,cfg=a.cfg,U=cfg.unit;
+  const tv='https://www.tradingview.com/chart/?symbol='+encodeURIComponent(t.tv||(t.sym+'USD'));
+  const cg=t.src==='cg'?`https://www.coingecko.com/en/coins/${t.id}`:null;
+  const el=$('#detail');el.classList.remove('hide');
+  const fib=a.fib;
+  const multi=TFS.map(k=>{const y=r.tf[k];return y&&y.a?`${TF_CFG[k].name}: <span class="${vc(y.a.score)}">${y.a.label} (${y.a.score>0?'+':''}${y.a.score})</span>`:`${TF_CFG[k].name}: <span class="mu">n/a</span>`}).join(' &nbsp;·&nbsp; ');
+  el.innerHTML=`
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+      <h2>${esc(t.sym)} <span class="mono" style="font-size:18px;color:var(--txt)">$${fmtP(a.price)}</span> <span class="mu mono" style="font-size:14px">${cfg.name} chart</span></h2>
+      <div><span class="sig ${a.cls}" style="font-size:13px">${a.label}</span> <span class="score ${vc(a.score)}" style="font-size:20px;margin-left:8px">${a.score>0?'+':''}${a.score}</span></div>
+    </div>
+    <div class="mu" style="font-size:13px;margin-top:6px">${multi}</div>
+    ${a.e20?`<div class="e20box"><div class="t">${cfg.per[0]}-${U} EMA — ${cfg.name} chart</div><div class="v">$${fmtP(a.e20.val)} <span style="font-size:15px">${a.e20.above?'▲ price above':'▼ price below'} (${a.e20.dist>0?'+':''}${a.e20.dist.toFixed(1)}%)</span></div><p>${esc(a.e20.text)}</p></div>`:''}
+    <div class="links">
+      <a href="${tv}" target="_blank" rel="noopener">Open on TradingView ↗</a>
+      ${cg?`<a href="${cg}" target="_blank" rel="noopener">CoinGecko ↗</a>`:''}
+      <span id="gtSlot" class="mu" style="font-size:13px;padding:6px 0">GeckoTerminal: looking up…</span>
+    </div>
+    <div class="ctb" id="ctb">${toolbarHtml(curTf,true)}</div>
+    <canvas id="cv" title="Drag the price numbers on the right to stretch the chart up/down · drag the dates at the bottom to zoom · drag the chart to move it · double-click an axis to reset"></canvas>
+    <div class="mu mono" style="font-size:11px;margin-top:6px">${legendHtml(cfg)}</div>
+    <div class="fgrid" style="margin-top:14px">${Object.values(a.f).map(y=>`<div class="factor"><div class="fv ${y.v>0?'p':y.v<0?'m':'z'}">${y.v>0?'+':''}${y.v}</div><div><div class="fn">${y.name}</div>${esc(y.text)}</div></div>`).join('')}</div>
+    ${fib?`<div class="mu mono" style="font-size:12px;margin-top:10px">Fib levels: ${fib.levels.filter(l=>l.r>0&&l.r<1).map(l=>l.r+' = $'+fmtP(l.p)).join(' · ')}<br>Extension targets: ${fib.ext.map(l=>l.r+' = $'+fmtP(l.p)).join(' · ')}</div>`:''}`;
+  hoverIdx=null;
+  el.onclick=chartClick;
+  views={};const cv=$('#cv');bindChart(cv,drawInline,()=>curTf);
+  requestAnimationFrame(drawInline);
+  gtLink(t).then(u=>{const sl=$('#gtSlot');if(!sl||selected!==key)return;
+    sl.outerHTML=u?`<a href="${u}" target="_blank" rel="noopener">GeckoTerminal ↗</a>`:`<span class="mu" style="font-size:13px;padding:6px 0">GeckoTerminal: no on-chain contract found (native coin — traded on exchanges)</span>`});
+  if(!noScroll)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ---------- Chart drawing ---------- */
+// opt: {bars (0 = all), log (null = auto), hover (bar index), big}
+function drawChart(cv,x,opt){
+  if(!cv||!x||!x.a)return;
+  opt=opt||{};
+  const {d,a}=x,cfg=a.cfg,dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight,big=!!opt.big;
+  cv.width=W*dpr;cv.height=H*dpr;
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
+  const nAll=d.c.length,want=opt.bars===0?nAll:(opt.bars||cfg.show),show0=Math.min(nAll,Math.max(10,want)),off=Math.max(0,Math.min(nAll-show0,Math.round(opt.off||0))),n=nAll-off,show=show0,st=n-show,ys=opt.ys||1,yc=opt.yc||0;
+  const fs=big?13:11,FONT=`${fs}px "DM Mono",monospace`,BOLD=`bold ${fs}px "DM Mono",monospace`;
+  g.font=FONT;
+  // price range of the bars on screen (so old peaks that are scrolled off no longer squash the chart)
+  let mn=Infinity,mx=-Infinity;
+  for(let i=st;i<n;i++){if(d.l[i]<mn)mn=d.l[i];if(d.h[i]>mx)mx=d.h[i]}
+  const canLog=mn>0,useLog=opt.log==null?(canLog&&mx/mn>4):(!!opt.log&&canLog);
+  const tr=v=>useLog?Math.log(v):v;
+  let t0=tr(mn),t1=tr(mx);const sp=(t1-t0)*0.06||1;t0-=sp;t1+=sp;
+  {const c=(t0+t1)/2,hf=(t1-t0)/2*ys,sh=yc*(t1-t0);t0=c-hf+sh;t1=c+hf+sh}
+  const inv=u=>useLog?Math.exp(u):u;
+  // layout
+  const rH=Math.max(64,Math.round(H*0.2)),bot=22,gapRsi=big?24:18,pT=12;
+  const pH=Math.max(80,H-pT-bot-gapRsi-rH),rT=pT+pH+gapRsi,padL=8;
+  const fibAll=a.fib?a.fib.levels.map(l=>({r:l.r,p:l.p,txt:l.r+'  '+fmtP(l.p)})):[];
+  const padR=Math.ceil(Math.max(70,g.measureText(fmtP(mx)).width,...fibAll.map(f=>g.measureText(f.txt).width))+16);
+  const X=i=>padL+(i-st)/Math.max(1,show-1)*(W-padL-padR);
+  const Y=v=>pT+(1-(tr(v)-t0)/(t1-t0))*pH;
+  const Yr=v=>rT+(1-v/100)*rH;
+  const plotR=W-padR;
+  // Fibonacci labels: only levels on screen, spread apart so they never overlap
+  const gapY=fs+4,topY=pT+fs/2,botY=pT+pH-fs/2;
+  const lab=fibAll.map(f=>({f,y0:Y(f.p)})).filter(o=>o.y0>=pT-2&&o.y0<=pT+pH+2).sort((p,q)=>p.y0-q.y0);
+  lab.forEach((o,i)=>{o.y=Math.max(o.y0,i?lab[i-1].y+gapY:topY)});
+  for(let i=lab.length-1;i>=0;i--){const lim=i===lab.length-1?botY:lab[i+1].y-gapY;lab[i].y=Math.min(lab[i].y,lim)}
+  // grid + price axis ticks (skipped where a Fibonacci label already sits)
+  g.textAlign='right';
+  for(let k=0;k<5;k++){
+    const f=(k+0.5)/5,v=inv(t0+(t1-t0)*f),y=Y(v);
+    g.strokeStyle='rgba(143,160,191,.10)';g.lineWidth=1;g.beginPath();g.moveTo(padL,y);g.lineTo(plotR,y);g.stroke();
+    if(!lab.some(o=>Math.abs(o.y-y)<gapY)){g.fillStyle='#8fa0bf';g.fillText(fmtP(v),W-4,y+fs/3)}
+  }
+  if(useLog){g.fillStyle='rgba(143,160,191,.75)';g.textAlign='right';g.fillText('LOG SCALE',plotR-6,pT+fs+2)}
+  g.save();g.beginPath();g.rect(padL,pT,plotR-padL,pH);g.clip();
+  const line=(arr,col,w)=>{g.beginPath();let on=false;for(let i=st;i<n;i++){const v=arr[i];if(v==null||(useLog&&v<=0)){on=false;continue}const px=X(i),py=Y(v);if(!on){g.moveTo(px,py);on=true}else g.lineTo(px,py)}g.strokeStyle=col;g.lineWidth=w;g.stroke()};
+  if(a.fib){
+    a.fib.levels.forEach(l=>{
+      const y=Y(l.p);if(y<pT-50||y>pT+pH+50)return;g.setLineDash([5,4]);g.strokeStyle=(l.r===0.618)?'rgba(240,199,94,.95)':'rgba(212,165,55,.45)';g.lineWidth=(l.r===0.618)?1.6:1;
+      g.beginPath();g.moveTo(padL,y);g.lineTo(plotR,y);g.stroke();
+    });
+    g.setLineDash([]);
+  }
+  const k=big?1.25:1;
+  line(a.s200,'#7dd3fc',1.6*k);
+  line(a.s100,'#f472b6',1.4*k);
+  line(a.s50,'#f0c75e',1.6*k);
+  line(d.c,'#e8edf5',1.6*k);
+  line(a.s20,'#fb923c',2.8*k);   // the 20 EMA is drawn on top and thicker so it stands out
+  a.divs.forEach(y=>{
+    if(y.b<st||y.a>=n||y.b>=n||y.a<st&&false)return;const arr=y.on==='l'?d.l:d.h;
+    g.beginPath();g.moveTo(X(y.a),Y(arr[y.a]));g.lineTo(X(y.b),Y(arr[y.b]));g.strokeStyle=y.dir>0?'#34d399':'#f87171';g.lineWidth=2.5;g.stroke();
+    [y.a,y.b].forEach(j=>{g.beginPath();g.arc(X(j),Y(arr[j]),3.5,0,7);g.fillStyle=y.dir>0?'#34d399':'#f87171';g.fill()});
+  });
+  g.restore();
+  // Fibonacci labels with short connectors
+  lab.forEach(o=>{
+    const pocket=o.f.r===0.618;
+    g.strokeStyle='rgba(212,165,55,.55)';g.lineWidth=1;g.beginPath();g.moveTo(plotR,o.y0);g.lineTo(plotR+5,o.y);g.stroke();
+    g.font=pocket?BOLD:FONT;g.textAlign='left';g.fillStyle=pocket?'#f0c75e':'#d4a537';g.fillText(o.f.txt,plotR+8,o.y+fs/3);
+  });
+  g.font=FONT;
+  // 20 EMA marker + tag
+  if(a.e20){
+    const e20v=a.s20[n-1]!=null?a.s20[n-1]:a.e20.val,ey=Y(e20v),ex=X(n-1),txt=`${cfg.per[0]} EMA ${fmtP(e20v)}`;
+    if(ey>=pT-4&&ey<=pT+pH+4){
+      g.beginPath();g.arc(ex,ey,4.5,0,7);g.fillStyle='#fb923c';g.fill();g.strokeStyle='#0a1628';g.lineWidth=1.5;g.stroke();
+      g.font=BOLD;const tw=g.measureText(txt).width+12,bx=Math.max(padL,ex-tw-10),by=Math.min(Math.max(pT+2,ey-fs-14),pT+pH-fs-8);
+      g.fillStyle='#2a1a0c';g.fillRect(bx,by,tw,fs+7);g.strokeStyle='#fb923c';g.lineWidth=1;g.strokeRect(bx,by,tw,fs+7);
+      g.fillStyle='#fdba74';g.textAlign='left';g.fillText(txt,bx+6,by+fs+1);g.font=FONT;
+    }
+  }
+  // RSI panel
+  g.strokeStyle='#24365a';g.lineWidth=1;g.strokeRect(padL,rT,plotR-padL,rH);
+  g.setLineDash([3,4]);[30,70].forEach(v=>{g.beginPath();g.moveTo(padL,Yr(v));g.lineTo(plotR,Yr(v));g.stroke()});g.setLineDash([]);
+  g.fillStyle='#8fa0bf';g.textAlign='left';g.fillText('RSI 14',padL+6,rT+fs+2);g.textAlign='right';g.fillText('70',W-4,Yr(70)+fs/3);g.fillText('30',W-4,Yr(30)+fs/3);
+  g.beginPath();let on=false;
+  for(let i=st;i<n;i++){const v=a.r[i];if(v==null){on=false;continue}const px=X(i),py=Yr(v);if(!on){g.moveTo(px,py);on=true}else g.lineTo(px,py)}
+  g.strokeStyle='#f0c75e';g.lineWidth=1.4*k;g.stroke();
+  a.divs.forEach(y=>{
+    if(y.b<st||y.b>=n)return;
+    g.beginPath();g.moveTo(X(y.a),Yr(a.r[y.a]));g.lineTo(X(y.b),Yr(a.r[y.b]));g.strokeStyle=y.dir>0?'#34d399':'#f87171';g.lineWidth=2.5;g.stroke();
+  });
+  // date ticks
+  g.fillStyle='#8fa0bf';
+  if(d.t){const cnt=big?7:4;for(let q=0;q<cnt;q++){const p=q/(cnt-1),i=Math.min(n-1,Math.round(st+p*(show-1)));const dt=new Date(d.t[i]);g.textAlign=q===0?'left':q===cnt-1?'right':'center';g.fillText(dt.toLocaleDateString(undefined,show>400?{month:'short',year:'2-digit'}:cfg.fmt),q===0?padL:q===cnt-1?plotR:padL+p*(plotR-padL),H-5)}}
+  // hover crosshair + readout
+  const hi=opt.hover;
+  if(hi!=null&&hi>=st&&hi<n){
+    const hx=X(hi);
+    g.strokeStyle='rgba(232,237,245,.4)';g.lineWidth=1;g.setLineDash([3,3]);g.beginPath();g.moveTo(hx,pT);g.lineTo(hx,rT+rH);g.stroke();g.setLineDash([]);
+    g.beginPath();g.arc(hx,Y(d.c[hi]),4,0,7);g.fillStyle='#e8edf5';g.fill();
+    if(a.r[hi]!=null){g.beginPath();g.arc(hx,Yr(a.r[hi]),3.5,0,7);g.fillStyle='#f0c75e';g.fill()}
+    const when=d.t?new Date(d.t[hi]).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'bar '+hi;
+    const rows=[['Close',fmtP(d.c[hi]),'#e8edf5'],['High',fmtP(d.h[hi]),'#8fa0bf'],['Low',fmtP(d.l[hi]),'#8fa0bf']];
+    [[cfg.per[0],a.s20,'#fb923c'],[cfg.per[1],a.s50,'#f0c75e'],[cfg.per[2],a.s100,'#f472b6'],[cfg.per[3],a.s200,'#7dd3fc']].forEach(([p,arr,col])=>{if(arr[hi]!=null)rows.push(['EMA '+p,fmtP(arr[hi]),col])});
+    if(a.r[hi]!=null)rows.push(['RSI',a.r[hi].toFixed(1),'#f0c75e']);
+    g.font=BOLD;const wDate=g.measureText(when).width;g.font=FONT;
+    const wRow=Math.max(...rows.map(rw=>g.measureText(rw[0]).width+g.measureText(rw[1]).width))+28;
+    const bw=Math.max(wDate,wRow)+16,rh=fs+5,bh=rh*(rows.length+1)+10;
+    const bx=hx>(padL+plotR)/2?padL+8:plotR-bw-8,by=pT+6;
+    g.fillStyle='rgba(10,22,40,.94)';g.fillRect(bx,by,bw,bh);g.strokeStyle='#d4a537';g.lineWidth=1;g.strokeRect(bx,by,bw,bh);
+    g.font=BOLD;g.textAlign='left';g.fillStyle='#f0c75e';g.fillText(when,bx+8,by+fs+3);g.font=FONT;
+    rows.forEach((rw,q)=>{const yy=by+fs+3+rh*(q+1);g.textAlign='left';g.fillStyle=rw[2];g.fillText(rw[0],bx+8,yy);g.textAlign='right';g.fillStyle='#e8edf5';g.fillText(rw[1],bx+bw-8,yy)});
+  }
+  cv._geo={st,show,n,nAll,padL,padR,W,H,pT,pH,rT,rH,plotR};
+}
+window.addEventListener('resize',()=>{drawInline();if(dlgOpen())drawDlg()});
+
+/* ---------- Paper log ---------- */
+function updateLog(){
+  const log=LS.get('bws_log',[]);
+  const today=new Date().toISOString().slice(0,10);
+  Object.values(results).forEach(r=>{
+    if(!r.tf)return;
+    TFS.forEach(tf=>{
+      const x=r.tf[tf];if(!x||!x.a)return;
+      const last=[...log].reverse().find(l=>l.key===r.t.key&&(l.tf||'D')===tf);
+      if(!last&&x.a.label==='NEUTRAL')return;
+      if(!last||last.label!==x.a.label){
+        const px=r.tf.D&&r.tf.D.a?r.tf.D.a.price:x.a.price;   // log the freshest (daily) price
+        log.push({key:r.t.key,tf,sym:r.t.sym,date:today,label:x.a.label,cls:x.a.cls,score:x.a.score,price:px});
+      }
+    });
+  });
+  LS.set('bws_log',log);
+}
+function renderLog(){
+  const log=LS.get('bws_log',[]).slice().reverse();
+  $('#logBody').innerHTML=log.length?log.map(x=>{
+    const r=results[x.key];
+    const nowA=r&&r.tf?(r.tf.D&&r.tf.D.a?r.tf.D.a:(r.tf[x.tf||'D']&&r.tf[x.tf||'D'].a)):null;
+    const now=nowA?nowA.price:null;
+    const mv=now?pct(now,x.price):null;
+    const dir=x.cls==='b'||x.cls==='sb'?1:x.cls==='r'||x.cls==='sr'?-1:0;
+    const eff=mv==null||!dir?null:mv*dir;
+    return `<tr><td class="mono">${x.date}</td><td class="sym">${esc(x.sym)}</td><td class="mono">${TF_CFG[x.tf||'D'].name}</td><td><span class="sig ${x.cls}">${x.label}</span></td><td class="score ${vc(x.score)}">${x.score>0?'+':''}${x.score}</td><td class="mono">$${fmtP(x.price)}</td><td class="mono">${now?'$'+fmtP(now):'—'}</td><td class="mono ${cc(mv)}">${mv==null?'—':(mv>0?'+':'')+mv.toFixed(1)+'%'}</td><td>${eff==null?'<span class="mu">—</span>':eff>=0?'<span class="up">✓ yes</span>':'<span class="dn">✗ no</span>'}</td></tr>`;
+  }).join(''):'<tr><td colspan="9" class="mu" style="padding:20px">Nothing logged yet. Run a scan — signal changes will be recorded here on each later scan.</td></tr>';
+}
+
+/* ---------- Events ---------- */
+$('#scanBtn').onclick=()=>scan(true);
+$('#clearBtn').onclick=()=>{cache={};LS.set('bws_cache_v2',{});results={};selected=null;$('#detail').classList.add('hide');render();setStatus('Cache cleared — run a scan.',0)};
+$('#cgKey').value=LS.get('bws_cgkey','');
+$('#cgKey').onchange=e=>LS.set('bws_cgkey',e.target.value.trim());
+$('#filters').onclick=e=>{const c=e.target.closest('.chip');if(!c)return;document.querySelectorAll('#filters .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');filter=c.dataset.f;render()};
+$('#sortSel').onchange=e=>{sortBy=e.target.value;render()};
+if(!TF_CFG[curTf])curTf='D';
+$('#tfSel').value=curTf;
+$('#tfSel').onchange=e=>{curTf=e.target.value;LS.set('bws_tf',curTf);render();if(selected)showDetail(selected,true)};
+$('#incOpen').onchange=()=>setStatus('Setting changed — click "Run scan" to apply it.');
+$('#tbody').onclick=e=>{
+  const del=e.target.closest('[data-del]');
+  if(del){e.stopPropagation();const k=del.dataset.del;custom=custom.filter(x=>x.key!==k);LS.set('bws_custom',custom);delete results[k];delete cache[k];LS.set('bws_cache_v2',cache);render();return}
+  const tr=e.target.closest('tr[data-key]');if(tr)showDetail(tr.dataset.key);
+};
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  $('#tab-scan').classList.toggle('hide',b.dataset.tab!=='scan');$('#tab-log').classList.toggle('hide',b.dataset.tab!=='log');$('#tab-bt').classList.toggle('hide',b.dataset.tab!=='bt');
+  if(b.dataset.tab==='bt'&&btAgg)renderBt();
+  if(b.dataset.tab==='log')renderLog();
+});
+$('#csvBtn').onclick=()=>{
+  const log=LS.get('bws_log',[]);
+  const csv='date,token,timeframe,signal,score,price_then\n'+log.map(x=>[x.date,x.sym,TF_CFG[x.tf||'D'].name,x.label,x.score,x.price].join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='bws-signal-log.csv';a.click();
+};
+$('#clearLogBtn').onclick=()=>{if(confirm('Clear the whole paper log?')){LS.set('bws_log',[]);renderLog()}};
+// add token
+$('#addBtn').onclick=()=>{$('#aErr').textContent='';$('#addDlg').showModal()};
+$('#aCancel').onclick=()=>$('#addDlg').close();
+$('#aSrc').onchange=e=>{$('#aCg').classList.toggle('hide',e.target.value!=='cg');$('#aGt').classList.toggle('hide',e.target.value!=='gt')};
+$('#aSave').onclick=()=>{
+  const src=$('#aSrc').value,sym=$('#aSym').value.trim().toUpperCase(),tv=$('#aTv').value.trim();
+  if(!sym){$('#aErr').textContent='Add a ticker label.';return}
+  let t;
+  if(src==='cg'){
+    const id=$('#aId').value.trim().toLowerCase();if(!id){$('#aErr').textContent='Add the CoinGecko API id.';return}
+    t={key:'cg:'+id,src:'cg',id,sym,tv,custom:true};
+  }else{
+    const addr=$('#aAddr').value.trim(),net=$('#aNet').value;if(!addr){$('#aErr').textContent='Add the contract address.';return}
+    t={key:'gt:'+net+':'+addr,src:'gt',net,addr,sym,tv,custom:true};
+  }
+  if(tokens().some(x=>x.key===t.key)){$('#aErr').textContent='That token is already in the list.';return}
+  custom.push(t);LS.set('bws_custom',custom);
+  $('#addDlg').close();['aId','aAddr','aSym','aTv'].forEach(i=>$('#'+i).value='');
+  render();setStatus(`${t.sym} added — click "Run scan" to analyze it.`);
+};
+
+/* ---------- Backtest UI ---------- */
+let btRows=[],btAgg=null,btMeta=null,btRunning=false,btSort='A';
+const btCache=LS.get('bws_bt_cache',{});
+const usd=v=>(v<0?'-':'+')+'$'+Math.abs(v).toLocaleString(undefined,{maximumFractionDigits:0});
+const pc=(v,d=1)=>v==null?'—':(v>0?'+':'')+(v*100).toFixed(d)+'%';
+async function runBacktest(){
+  if(btRunning||scanning)return;
+  btRunning=true;$('#btRun').disabled=true;
+  const N=Math.max(5,Math.min(150,parseInt($('#btN').value)||100));
+  const cv=parseFloat($('#btCost').value),cost=(isNaN(cv)?0.3:Math.max(0,cv))/100;
+  const alloc=parseFloat($('#btAlloc').value)||1000;
+  const years=parseInt($('#btYears').value)||5;
+  const tf=TF_CFG[$('#btTf').value]?$('#btTf').value:'D',cfg=TF_CFG[tf],minBars=cfg.per[3]+30;
+  const key=($('#cgKey').value||'').trim(),gap=key?2300:5500,kq=key?`&x_cg_demo_api_key=${encodeURIComponent(key)}`:'';
+  const msg=(m,p)=>{$('#btStatus').textContent=m;if(p!=null)$('#btProg').style.width=(p*100)+'%'};
+  try{
+    let useBn=false;
+    if($('#btSrc').value==='bn'||tf!=='D'){
+      useBn=await bnProbe(x=>msg(x,0));
+      if(!useBn){
+        if(tf!=='D')throw new Error(`${cfg.name} backtests need Binance data, which could not be reached from this browser. Try the Daily timeframe (CoinGecko, 365 days).`);
+        msg('Binance data could not be reached from this browser, so falling back to CoinGecko (only 365 days of history)…',0);await sleep(3500);
+      }
+    }
+    const bars=tf==='D'?Math.round(years*365):tf==='W'?1000:300;
+    let mk=null;
+    msg('Fetching the market-cap ranking…',0);
+    try{
+      mk=await (await fetchRetry(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${Math.min(250,Math.ceil(N*1.7)+10)}&page=1`+kq,x=>msg(x,0))).json();
+      if(!Array.isArray(mk))throw new Error('bad ranking');
+    }catch(e){
+      if(!useBn)throw e;
+      msg('CoinGecko ranking unavailable — ranking by Binance trading volume instead…',0);
+      const tj=await (await fetch(bnHost+'/api/v3/ticker/24hr')).json();
+      mk=tj.filter(x=>/USDT$/.test(x.symbol)).sort((a,b)=>b.quoteVolume-a.quoteVolume).map(x=>{const b=x.symbol.slice(0,-4);return {id:b.toLowerCase(),symbol:b,name:b}});
+    }
+    if(!useBn)await sleep(gap);
+    const rows=[],used=new Set(),sk={pegged:0,short:0,fail:0,nob:0};let fetchedCount=0;
+    for(let i=0;i<mk.length&&rows.length<N;i++){
+      const m=mk[i],sym=String(m.symbol).toUpperCase(),idl=(m.id+' '+m.name).toLowerCase();
+      if(STABLE.has(String(m.symbol).toLowerCase())||PEG_RE.test(idl)){sk.pegged++;continue}
+      if(used.has(sym))continue;
+      msg(`Testing ${sym} — ${rows.length} of ${N} coins done…`,rows.length/N);
+      let d=null,fetched=false;
+      if(useBn){
+        const pair=sym+'USDT';
+        if(!bnSymbols.has(pair)){sk.nob++;continue}
+        try{d=await bnKlines(pair,bars,cfg.interval,false,x=>msg(`${sym}: ${x}`));await sleep(100)}catch(e){sk.fail++;continue}
+      }else{
+        let rec=btCache[m.id];
+        if(!rec||Date.now()-rec.ts>12*3600*1000){
+          try{
+            const j=await (await fetchRetry(`https://api.coingecko.com/api/v3/coins/${m.id}/market_chart?vs_currency=usd&days=365&interval=daily`+kq,x=>msg(`${sym}: ${x}`))).json();
+            rec={ts:Date.now(),c:(j.prices||[]).map(x=>x[1])};btCache[m.id]=rec;fetched=true;fetchedCount++;
+            if(fetchedCount%10===0)LS.set('bws_bt_cache',btCache);
+          }catch(e){sk.fail++;await sleep(gap);continue}
+        }
+        const c=rec.c.filter(v=>v>0&&isFinite(v));
+        d={c,h:c,l:c};
+      }
+      if(d.c.length<minBars){sk.short++;if(fetched)await sleep(gap);continue}
+      if(stableLike(d.c)){sk.pegged++;if(fetched)await sleep(gap);continue}
+      used.add(sym);
+      const r=backtestToken(d,cost,alloc,cfg);
+      rows.push({rank:i+1,id:m.id,sym,name:m.name,...r});
+      if(fetched)await sleep(gap);
+      await sleep(0);   // let the page breathe
+    }
+    if(!useBn)LS.set('bws_bt_cache',btCache);
+    if(!rows.length)throw new Error('No coins could be tested (they need at least '+minBars+' '+cfg.unit+'s of history)');
+    const longest=rows.reduce((a,b)=>b.A.eq.length>a.A.eq.length?b:a);
+    const dates=longest.t?longest.t.slice(longest.start):null;
+    btRows=rows;
+    btMeta={alloc,cost,N:rows.length,sk,when:new Date(),src:useBn?'Binance':'CoinGecko',years:useBn?years:1,dates,tf};
+    btAgg={A:aggregate(rows,'A',alloc),B:aggregate(rows,'B',alloc),H:aggregate(rows,'H',alloc)};
+    msg(`Done — ${rows.length} coins tested on the ${cfg.name.toLowerCase()} timeframe (skipped: ${sk.pegged} stablecoin/wrapped, ${sk.nob} not on Binance, ${sk.short} with under ${minBars} ${cfg.unit}s of history, ${sk.fail} failed to load).`,1);
+    renderBt();
+  }catch(e){msg('Backtest stopped: '+(e.message||e),0)}
+  btRunning=false;$('#btRun').disabled=false;
+}
+function renderBt(){
+  if(!btAgg)return;
+  const {alloc,N}=btMeta,capital=alloc*N;
+  const defs=[['A','Scanner score','Long when score is +2 or higher, exit at 0 or lower'],['B','Trend baseline','Long above the slowest EMA (200) on a 20-bar breakout, exit under the 50 EMA'],['H','Buy & hold','Buy every coin at the start of its test window and hold']];
+  const beat=btRows.filter(r=>r.A.ret>r.H.ret).length;
+  const cards=defs.map(([k,t,d])=>{
+    const a=btAgg[k],col=a.pnl>=0?'up':'dn';
+    return `<div class="card"><h4>${t}</h4><div class="desc">${d}</div>
+      <div class="big ${col}">${usd(a.pnl)}</div>
+      <div class="row2"><span>Return on $${capital.toLocaleString()}</span><b class="${col}">${pc(a.ret)}</b></div>
+      <div class="row2"><span>Coins profitable</span><b>${a.pos} of ${N}</b></div>
+      <div class="row2"><span>Trades · win rate</span><b>${k==='H'?'—':a.trades+' · '+(a.win==null?'—':(a.win*100).toFixed(0)+'%')}</b></div>
+      <div class="row2"><span>Avg time invested</span><b>${(a.inMkt*100).toFixed(0)}%</b></div>
+      <div class="row2"><span>Worst portfolio drawdown</span><b class="dn">${pc(a.mdd,0)}</b></div>
+      ${k==='A'?`<div class="row2"><span>Beat buy &amp; hold on</span><b>${beat} of ${N} coins</b></div>`:''}
+    </div>`}).join('');
+  const days=Math.max(...btRows.map(r=>r.days));
+  $('#btOut').innerHTML=`
+    <div class="mu" style="font-size:13px;margin-top:6px">${N} coins · ${TF_CFG[btMeta.tf].name} bars · ${btMeta.src} data · $${alloc.toLocaleString()} per coin · ${(btMeta.cost*100).toFixed(2)}% cost per side · up to ${days} test ${TF_CFG[btMeta.tf].unit}s${btMeta.dates?' ('+new Date(btMeta.dates[0]).toLocaleDateString(undefined,{month:'short',year:'numeric'})+' → '+new Date(btMeta.dates[btMeta.dates.length-1]).toLocaleDateString(undefined,{month:'short',year:'numeric'})+')':''} · run ${btMeta.when.toLocaleString()}</div>
+    <div class="cards">${cards}</div>
+    <div class="panel" style="margin-top:0"><h2 style="font-size:24px">Portfolio value over the test window</h2>
+      <canvas id="btCv" style="height:300px;margin-top:10px"></canvas>
+      <div class="mu mono" style="font-size:11px;margin-top:6px"><span style="color:#f0c75e">━</span> Scanner score &nbsp; <span style="color:#7dd3fc">━</span> Trend baseline &nbsp; <span style="color:#e8edf5">━</span> Buy &amp; hold &nbsp; · dashed = starting capital</div></div>
+${yearHtml()}
+    <div class="bar" style="margin-top:16px"><span class="mu" style="font-size:13px">Per-coin results — sort by</span>
+      <select id="btSortSel"><option value="A">Scanner return</option><option value="diff">Scanner minus buy &amp; hold</option><option value="H">Buy &amp; hold return</option><option value="B">Baseline return</option><option value="rank">Market-cap rank</option></select></div>
+    <div class="tblwrap scroll"><table style="min-width:900px"><thead><tr><th>#</th><th>Coin</th><th>Bars</th><th>Scanner</th><th>Scanner PNL</th><th>Trades</th><th>Win rate</th><th>Invested</th><th>Baseline</th><th>Buy &amp; hold</th></tr></thead><tbody id="btBody"></tbody></table></div>`;
+  $('#btSortSel').value=btSort;
+  $('#btSortSel').onchange=e=>{btSort=e.target.value;fillBtTable()};
+  fillBtTable();
+  requestAnimationFrame(drawBtChart);
+}
+function yearHtml(){
+  if(!btMeta.dates)return '';
+  const ya=yearly(btAgg.A.tot,btMeta.dates),yb=yearly(btAgg.B.tot,btMeta.dates),yh=yearly(btAgg.H.tot,btMeta.dates);
+  const cell=o=>{const v=o.to/o.from-1;return `<td class="mono ${cc(v)}">${pc(v)}</td>`};
+  return `<div class="panel"><h2 style="font-size:24px">Portfolio return by calendar year</h2>
+    <div class="mu" style="font-size:12px;margin:4px 0 8px">The first and last years are partial. This is what shows whether a result came from one lucky market regime.</div>
+    <div class="tblwrap"><table style="min-width:520px"><thead><tr><th>Year</th><th>Scanner score</th><th>Trend baseline</th><th>Buy &amp; hold</th></tr></thead><tbody>
+    ${ya.map((o,i)=>`<tr><td class="mono">${o.y}</td>${cell(o)}${cell(yb[i])}${cell(yh[i])}</tr>`).join('')}
+    </tbody></table></div></div>`;
+}
+function fillBtTable(){
+  const rows=btRows.slice(),alloc=btMeta.alloc;
+  rows.sort((x,y)=>btSort==='rank'?x.rank-y.rank:btSort==='diff'?(y.A.ret-y.H.ret)-(x.A.ret-x.H.ret):y[btSort].ret-x[btSort].ret);
+  $('#btBody').innerHTML=rows.map(r=>{
+    const tr=r.A.trades,w=tr.filter(t=>t.r>0).length;
+    return `<tr><td class="mu">${r.rank}</td><td class="sym">${esc(r.sym)}<small>${esc(r.name)}</small></td><td class="mono">${r.days}</td>
+      <td class="mono ${cc(r.A.ret)}">${pc(r.A.ret)}</td><td class="mono ${cc(r.A.ret)}">${usd(r.A.final-alloc)}</td>
+      <td class="mono">${tr.length}</td><td class="mono">${tr.length?(w/tr.length*100).toFixed(0)+'%':'—'}</td><td class="mono">${(r.A.inMkt*100).toFixed(0)}%</td>
+      <td class="mono ${cc(r.B.ret)}">${pc(r.B.ret)}</td><td class="mono ${cc(r.H.ret)}">${pc(r.H.ret)}</td></tr>`}).join('');
+}
+function drawBtChart(){
+  const cv=$('#btCv');if(!cv||!btAgg)return;
+  const dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;
+  cv.width=W*dpr;cv.height=H*dpr;
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
+  const base=btMeta.alloc*btMeta.N,series=[['#e8edf5',btAgg.H.tot],['#7dd3fc',btAgg.B.tot],['#f0c75e',btAgg.A.tot]];
+  let mn=base,mx=base;series.forEach(s=>s[1].forEach(v=>{if(v<mn)mn=v;if(v>mx)mx=v}));
+  const sp=(mx-mn)*0.08||1;mn-=sp;mx+=sp;
+  const padL=8,padR=70,pT=10,pB=22,len=btAgg.A.tot.length;
+  const X=i=>padL+i/(len-1)*(W-padL-padR),Y=v=>pT+(1-(v-mn)/(mx-mn))*(H-pT-pB);
+  g.font='11px "DM Mono",monospace';g.fillStyle='#8fa0bf';g.textAlign='right';
+  [mn+sp,base,mx-sp].forEach(v=>g.fillText('$'+Math.round(v).toLocaleString(),W-4,Y(v)+4));
+  g.setLineDash([5,4]);g.strokeStyle='#4a5f86';g.beginPath();g.moveTo(padL,Y(base));g.lineTo(W-padR,Y(base));g.stroke();g.setLineDash([]);
+  series.forEach(([col,arr])=>{g.beginPath();arr.forEach((v,i)=>{i?g.lineTo(X(i),Y(v)):g.moveTo(X(i),Y(v))});g.strokeStyle=col;g.lineWidth=2;g.stroke()});
+  const fd=i=>new Date(btMeta.dates[i]).toLocaleDateString(undefined,{month:'short',year:'numeric'});
+  g.textAlign='left';g.fillText(btMeta.dates?fd(0):'start of test window',padL,H-6);g.textAlign='right';g.fillText(btMeta.dates?fd(btMeta.dates.length-1):'today',W-padR,H-6);
+}
+$('#btRun').onclick=runBacktest;
+$('#btCsv').onclick=()=>{
+  if(!btRows.length){$('#btStatus').textContent='Run the backtest first.';return}
+  const al=btMeta.alloc;
+  const head='timeframe,rank,symbol,name,test_bars,scanner_return_pct,scanner_pnl_usd,scanner_trades,scanner_win_rate_pct,scanner_pct_time_invested,baseline_return_pct,buy_hold_return_pct\n';
+  const body=btRows.map(r=>{const w=r.A.trades.filter(t=>t.r>0).length,n=r.A.trades.length;return [TF_CFG[btMeta.tf].name,r.rank,r.sym,'"'+r.name.replace(/"/g,'')+'"',r.days,(r.A.ret*100).toFixed(2),(r.A.final-al).toFixed(2),n,n?(w/n*100).toFixed(0):'',(r.A.inMkt*100).toFixed(0),(r.B.ret*100).toFixed(2),(r.H.ret*100).toFixed(2)].join(',')}).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([head+body],{type:'text/csv'}));a.download='bws-backtest.csv';a.click();
+};
+window.addEventListener('resize',()=>{if(!$('#tab-bt').classList.contains('hide'))drawBtChart()});
+$('#btTf').onchange=e=>{$('#btYears').disabled=e.target.value!=='D'};
+
+(function(){const dl=$('#chartDlg');if(dl){dl.onclick=e=>{if(e.target===dl)closeDlg();else chartClick(e)};dl.onclose=()=>{hoverIdx=null}}})();
+loadCached();render();renderLog();
+if(!Object.keys(results).length)setStatus('Click "Run scan" to analyze the watchlist. With free Binance data a scan takes about 30 seconds and covers Daily, Weekly and Monthly; without it, CoinGecko is daily-only and takes about 2 minutes.');
+</script>
+</body>
+</html>
